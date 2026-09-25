@@ -577,12 +577,21 @@ const server = http.createServer(async (req, res) => {
     let subtitles = "";
     if (fs.existsSync(srtPath)) subtitles = fs.readFileSync(srtPath, "utf8");
 
+    const karaokeJsonPath = path.join(epDir, "subtitles_karaoke.json");
+    let karaokeData = null;
+    if (fs.existsSync(karaokeJsonPath)) {
+      try {
+        karaokeData = JSON.parse(fs.readFileSync(karaokeJsonPath, "utf8"));
+      } catch {}
+    }
+
     res.writeHead(200, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({
       ...summary,
       scriptText,
       shots,
-      subtitles
+      subtitles,
+      karaokeData
     }));
   }
 
@@ -592,15 +601,40 @@ const server = http.createServer(async (req, res) => {
     req.on("data", c => { body += c; });
     req.on("end", () => {
       try {
-        const { episodeId } = JSON.parse(body || "{}");
-        const epDir = path.join(paths.episodesDir, episodeId || "EP001");
-        if (fs.existsSync(epDir)) {
-          exec(`explorer.exe "${epDir}"`);
+        const { episodeId, subPath } = JSON.parse(body || "{}");
+        const baseDir = path.join(paths.episodesDir, episodeId || "EP001");
+        const targetDir = subPath ? path.join(baseDir, subPath) : baseDir;
+        if (fs.existsSync(targetDir)) {
+          exec(`explorer.exe "${targetDir}"`);
           res.writeHead(200, { "Content-Type": "application/json" });
-          return res.end(JSON.stringify({ success: true, opened: epDir }));
+          return res.end(JSON.stringify({ success: true, opened: targetDir }));
         }
         res.writeHead(404, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: "Folder not found" }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: Export Full CapCut Timeline Draft
+  if (pathname === "/api/export/capcut" && req.method === "POST") {
+    let body = "";
+    req.on("data", c => { body += c; });
+    req.on("end", async () => {
+      try {
+        const { episodeId } = JSON.parse(body || "{}");
+        const targetId = episodeId || "EP001";
+        const capcutBuilder = require("../engine/scripts/build_capcut_project");
+        const result = await capcutBuilder.run(targetId, paths.projectDir);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({
+          success: true,
+          episodeId: targetId,
+          ...result
+        }));
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: err.message }));

@@ -204,6 +204,13 @@
               </div>
             </div>
 
+            <!-- Floating Synchronized Subtitle / Karaoke HUD -->
+            <div class="video-karaoke-hud" id="videoKaraokeHud" style="position: absolute; bottom: 25px; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none; z-index: 8;">
+              <div id="videoKaraokeText" style="background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); padding: 8px 18px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.15); font-family: 'Montserrat', sans-serif; font-size: 1.05rem; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.5px; max-width: 85%; text-align: center; transition: all 0.15s ease;">
+                <span style="color: #facc15;">YGMotion Studio</span> V3 Master Timeline
+              </div>
+            </div>
+
             <div class="render-banner" id="renderBanner" style="display: none;">
               <div class="spinner"></div>
               <span id="renderBannerText">Rendering Multi-Style 1080p Video... Check console for live progress!</span>
@@ -502,6 +509,14 @@
                 <span class="btn-subtitle">ASS & SRT Format</span>
               </div>
             </a>
+
+            <button id="exportCapCutBtn" class="download-btn capcut-btn" style="width: 100%; border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08); cursor: pointer; text-align: left; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); transition: all 0.2s;">
+              <span style="font-size: 1.4rem;">✂️</span>
+              <div class="btn-text">
+                <span class="btn-title" style="color: #38bdf8; font-weight: 700;">Export CapCut Timeline</span>
+                <span class="btn-subtitle" id="capcutStatusLabel" style="font-size: 0.75rem; color: #94a3b8;">Build draft_content.json with full tracks</span>
+              </div>
+            </button>
           </div>
 
           <button id="triggerRenderBtn" class="btn btn-secondary btn-block">
@@ -1221,6 +1236,69 @@
     </div>
   </div>
 
+  <!-- ========================================== -->
+  <!-- 4. CAPCUT DESKTOP TIMELINE EXPORTER MODAL  -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop modal-overlay" id="capcutModal" style="display: none;">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem;">✂️</span>
+          <div>
+            <h2 style="margin: 0; font-size: 1.25rem;">CapCut Desktop Timeline Exporter</h2>
+            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94a3b8;">Multi-Track Timeline Assembly & Native Draft Generator</p>
+          </div>
+        </div>
+        <button class="modal-close" id="closeCapcutModalBtn">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: #38bdf8;">✓ CapCut Draft Ready</span>
+            <span id="capcutDurationBadge" style="font-size: 0.75rem; padding: 2px 8px; background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border-radius: 4px;">2.1 Minutes</span>
+          </div>
+          <p style="margin: 0; font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;">
+            Timeline tracks and manifest files have been compiled into your episode's CapCut draft directory. You can open this project in CapCut Desktop or copy the draft path below.
+          </p>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">CapCut Draft Directory Path:</label>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <input type="text" id="capcutDraftPathInput" class="form-input" readonly style="flex: 1; font-family: monospace; font-size: 0.8rem; padding: 8px 12px; background: rgba(0,0,0,0.4);">
+            <button id="btnCopyCapcutPath" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Copy Path 📋</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 12px;">
+            <strong style="display: block; font-size: 0.85rem; color: #f8fafc; margin-bottom: 4px;">Track V1 (Video)</strong>
+            <span style="font-size: 0.75rem; color: #94a3b8;" id="capcutVideoCountLabel">Footage clips with Ken Burns camera zoom</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 12px;">
+            <strong style="display: block; font-size: 0.85rem; color: #f8fafc; margin-bottom: 4px;">Track V2 (Subtitles)</strong>
+            <span style="font-size: 0.75rem; color: #94a3b8;" id="capcutCaptionsCountLabel">Synchronized word karaoke text blocks</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 12px;">
+            <strong style="display: block; font-size: 0.85rem; color: #f8fafc; margin-bottom: 4px;">Track A1 (Narration)</strong>
+            <span style="font-size: 0.75rem; color: #94a3b8;">High-retention ElevenLabs master audio</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 12px;">
+            <strong style="display: block; font-size: 0.85rem; color: #f8fafc; margin-bottom: 4px;">Track A2 (Music Bed)</strong>
+            <span style="font-size: 0.75rem; color: #94a3b8;">Sidechain ducked at -18dB under dialogue</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button id="btnOpenCapcutFolder" class="btn btn-primary btn-glow btn-block" style="flex: 1; padding: 10px;">Open in Windows Explorer 📂</button>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px;">
+        <button class="btn btn-secondary" id="closeCapcutModalFooterBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ======================================================== -->
   <!-- YGMOTION AI CO-DIRECTOR DRAWER (Ollama Qwen & DeepSeek)   -->
   <!-- ======================================================== -->
@@ -1248,8 +1326,14 @@
       <button class="btn-quick-act" id="actGenerateHook" title="Brainstorm escalation hooks & psychological plot with DeepSeek R1">
         <span>🎬</span> Hook & Plot
       </button>
+      <button class="btn-quick-act" id="actViralTitles" title="Generate 5 High CTR Viral Titles and 3 Thumbnail Concepts">
+        <span>🔥</span> Viral Titles & Thumbs
+      </button>
       <button class="btn-quick-act" id="actGenerateShots" title="Generate prompt manifest shots from script with Qwen 2.5">
         <span>🎨</span> Shots Manifest
+      </button>
+      <button class="btn-quick-act" id="actRetentionAudit" title="Audit narrative pacing and pinpoint retention cliff drops">
+        <span>⚡</span> Retention Audit
       </button>
       <button class="btn-quick-act" id="actRefineScene" title="Polish and punch up active script dialogue">
         <span>✍️</span> Polish Script

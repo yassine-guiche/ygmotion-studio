@@ -384,6 +384,26 @@ if (masterVideo) {
       const activeShot = episodeData.shots[activeIndex];
       if (activeShot) highlightActiveShot(activeShot.shotId);
     }
+
+    // Live Synchronized Karaoke Subtitle HUD
+    const curMs = cur * 1000;
+    const hudText = document.getElementById("videoKaraokeText");
+    const hudBox = document.getElementById("videoKaraokeHud");
+    if (hudText && episodeData?.karaokeData?.chunks) {
+      const chunk = episodeData.karaokeData.chunks.find(c => curMs >= c.startMs && curMs <= c.endMs);
+      if (chunk && chunk.words && chunk.words.length > 0) {
+        if (hudBox) hudBox.style.display = "flex";
+        const formatted = chunk.words.map(w => {
+          const isCurrent = curMs >= w.startMs && curMs <= w.endMs;
+          if (isCurrent) {
+            return `<span style="color: #facc15; font-size: 1.15em; font-weight: 900; text-shadow: 0 0 12px rgba(250, 204, 21, 0.95);">${w.word}</span>`;
+          }
+          const passed = curMs > w.endMs;
+          return `<span style="opacity: ${passed ? 0.65 : 0.95};">${w.word}</span>`;
+        }).join(" ");
+        hudText.innerHTML = formatted;
+      }
+    }
   });
 }
 
@@ -1984,6 +2004,13 @@ function openSceneDirectorGate() {
         <strong style="font-size: 0.9rem; color: #c084fc;">Scene ${sIdx + 1}: ${scene.title}</strong>
         <span style="font-size: 0.75rem; color: #38bdf8;">${durSec}s Duration</span>
       </div>
+
+      <div class="scene-preview-container" style="margin-bottom: 10px; width: 100%; height: 130px; background: #000; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.06);">
+        <img class="scene-preview-img" src="/media/${currentEpisodeId || 'EP001'}/channel_assets/style/master_style_reference_16x9.jpg" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+        <video class="scene-preview-video" style="width: 100%; height: 100%; object-fit: cover; display: none;" autoplay loop muted playsinline></video>
+        <span class="motion-pill" style="position: absolute; bottom: 6px; right: 6px; font-size: 0.65rem; background: rgba(0,0,0,0.75); color: #38bdf8; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.3);">Image Ready</span>
+      </div>
+
       <p style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 10px; line-height: 1.4;">"${scene.text.slice(0, 100)}..."</p>
       
       <div style="margin-bottom: 10px;">
@@ -2024,6 +2051,19 @@ function openSceneDirectorGate() {
         const data = await res.json();
         if (data.success) {
           btnAnimate.textContent = "✓ Animated!";
+          const vid = card.querySelector(".scene-preview-video");
+          const img = card.querySelector(".scene-preview-img");
+          const pill = card.querySelector(".motion-pill");
+          if (vid && data.clipUrl) {
+            vid.src = `${data.clipUrl}?t=${Date.now()}`;
+            vid.style.display = "block";
+            if (img) img.style.display = "none";
+            if (pill) {
+              pill.textContent = `🎬 ${motionSelect.value.toUpperCase()}`;
+              pill.style.color = "#34d399";
+              pill.style.borderColor = "rgba(52, 211, 153, 0.4)";
+            }
+          }
         } else {
           alert("Animation failed: " + data.error);
           btnAnimate.textContent = "Animate Scene 🎬";
@@ -2128,7 +2168,9 @@ function initAiCoDirector() {
   const vramEjectBtn = document.getElementById("ygmotionVramEjectBtn");
 
   const actHook = document.getElementById("actGenerateHook");
+  const actViralTitles = document.getElementById("actViralTitles");
   const actShots = document.getElementById("actGenerateShots");
+  const actRetentionAudit = document.getElementById("actRetentionAudit");
   const actRefine = document.getElementById("actRefineScene");
 
   let activeModel = "qwen2.5-coder:7b";
@@ -2427,6 +2469,18 @@ function initAiCoDirector() {
     });
   }
 
+  // Quick Action: Viral Titles & Thumbnail Concepts (DeepSeek R1)
+  if (actViralTitles) {
+    actViralTitles.addEventListener("click", () => {
+      selectModel("deepseek-r1:8b");
+      const currentChannel = document.getElementById("navChannelName") ? document.getElementById("navChannelName").textContent : "YGMotion";
+      const scriptBox = document.getElementById("scriptContent");
+      const topic = scriptBox && scriptBox.value ? scriptBox.value.slice(0, 300) : "Viral High Retention Story";
+      const prompt = `Act as an elite YouTube algorithm strategist (10M+ sub retention). For the channel "${currentChannel}" with topic excerpt "${topic}":\n1. Generate 5 High-CTR Curiosity-Gap Titles (under 55 chars, 1 all-caps trigger word, maximum intrigue).\n2. Design 3 High-CTR Thumbnail Concepts with exact visual composition, foreground focal point, color grading contrast, and punchy 2-word text overlay.`;
+      sendAiMessage(prompt);
+    });
+  }
+
   // Quick Action: Shots Manifest (Qwen 2.5 Coder)
   if (actShots) {
     actShots.addEventListener("click", () => {
@@ -2434,6 +2488,17 @@ function initAiCoDirector() {
       const scriptBox = document.getElementById("scriptContent");
       const scriptSnippet = scriptBox && scriptBox.value ? scriptBox.value.slice(0, 800) : "A POV cyberpunk operative breaks into an abandoned high-tech server room.";
       const prompt = `Generate a JSON footage manifest structure for this scene snippet with shotId, duration (seconds), and hyper-realistic visual prompts with cinematic lighting and Unreal Engine 5 render style:\n\n"${scriptSnippet}"`;
+      sendAiMessage(prompt);
+    });
+  }
+
+  // Quick Action: Retention Audit (Qwen 2.5 Coder)
+  if (actRetentionAudit) {
+    actRetentionAudit.addEventListener("click", () => {
+      selectModel("qwen2.5-coder:7b");
+      const scriptBox = document.getElementById("scriptContent");
+      const text = scriptBox && scriptBox.value ? scriptBox.value.slice(0, 1000) : "";
+      const prompt = `Conduct a comprehensive YouTube Audience Retention Audit on this script excerpt:\n\n"${text}"\n\nIdentify:\n1. ⚠️ Retention cliff drops (where viewers might click away).\n2. ⚡ Pacing adjustments (WPM & sentence structure speed).\n3. 🎯 3 Micro-hooks to inject every 30 seconds to lock retention above 70%.`;
       sendAiMessage(prompt);
     });
   }
@@ -2450,6 +2515,105 @@ function initAiCoDirector() {
       sendAiMessage(prompt);
     });
   }
+}
+
+// ==========================================
+// CAPCUT DESKTOP TIMELINE EXPORTER CONTROLLER
+// ==========================================
+const exportCapCutBtn = document.getElementById("exportCapCutBtn");
+const capcutModal = document.getElementById("capcutModal");
+const closeCapcutModalBtn = document.getElementById("closeCapcutModalBtn");
+const closeCapcutModalFooterBtn = document.getElementById("closeCapcutModalFooterBtn");
+const capcutDraftPathInput = document.getElementById("capcutDraftPathInput");
+const btnCopyCapcutPath = document.getElementById("btnCopyCapcutPath");
+const btnOpenCapcutFolder = document.getElementById("btnOpenCapcutFolder");
+const capcutDurationBadge = document.getElementById("capcutDurationBadge");
+const capcutVideoCountLabel = document.getElementById("capcutVideoCountLabel");
+const capcutCaptionsCountLabel = document.getElementById("capcutCaptionsCountLabel");
+const capcutStatusLabel = document.getElementById("capcutStatusLabel");
+
+if (exportCapCutBtn) {
+  exportCapCutBtn.addEventListener("click", async () => {
+    try {
+      exportCapCutBtn.disabled = true;
+      if (capcutStatusLabel) capcutStatusLabel.textContent = "Compiling Draft Timeline...";
+
+      const res = await fetch("/api/export/capcut", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ episodeId: currentEpisode || "EP001" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (capcutDraftPathInput) capcutDraftPathInput.value = data.draftDir || data.draftPath || "";
+        if (capcutDurationBadge) {
+          const durSec = data.metaInfo?.duration_ms ? (data.metaInfo.duration_ms / 1000) : (data.timelineDurationSec || 120);
+          const durMin = (durSec / 60).toFixed(1);
+          const clips = data.videoSegments ?? data.shotsCount ?? 0;
+          capcutDurationBadge.textContent = `${durMin} min • ${clips} clips`;
+        }
+        if (capcutVideoCountLabel) capcutVideoCountLabel.textContent = `${data.videoSegments ?? data.shotsCount ?? 0} visual clips loaded`;
+        if (capcutCaptionsCountLabel) capcutCaptionsCountLabel.textContent = `${data.captionSegments ?? data.captionsCount ?? 0} karaoke word chunks`;
+        if (capcutModal) capcutModal.style.display = "flex";
+        if (capcutStatusLabel) capcutStatusLabel.textContent = "Draft compiled ready ✂️";
+      } else {
+        alert("CapCut Export Notice: " + (data.error || "Could not compile project"));
+        if (capcutStatusLabel) capcutStatusLabel.textContent = "Export notice";
+      }
+    } catch (err) {
+      alert("CapCut Export Error: " + err.message);
+    } finally {
+      exportCapCutBtn.disabled = false;
+    }
+  });
+}
+
+if (btnCopyCapcutPath && capcutDraftPathInput) {
+  btnCopyCapcutPath.addEventListener("click", async () => {
+    const val = capcutDraftPathInput.value;
+    if (val) {
+      try {
+        await navigator.clipboard.writeText(val);
+        const originalText = btnCopyCapcutPath.textContent;
+        btnCopyCapcutPath.textContent = "Copied! ✓";
+        setTimeout(() => { btnCopyCapcutPath.textContent = originalText; }, 2000);
+      } catch (e) {
+        capcutDraftPathInput.select();
+        document.execCommand("copy");
+      }
+    }
+  });
+}
+
+if (btnOpenCapcutFolder) {
+  btnOpenCapcutFolder.addEventListener("click", async () => {
+    try {
+      btnOpenCapcutFolder.disabled = true;
+      await fetch("/api/open-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          episodeId: currentEpisode || "EP001",
+          subPath: "capcut_draft"
+        })
+      });
+    } catch (e) {
+      console.warn("Could not open CapCut folder:", e);
+    } finally {
+      btnOpenCapcutFolder.disabled = false;
+    }
+  });
+}
+
+if (closeCapcutModalBtn) {
+  closeCapcutModalBtn.addEventListener("click", () => {
+    if (capcutModal) capcutModal.style.display = "none";
+  });
+}
+if (closeCapcutModalFooterBtn) {
+  closeCapcutModalFooterBtn.addEventListener("click", () => {
+    if (capcutModal) capcutModal.style.display = "none";
+  });
 }
 
 // ==========================================
