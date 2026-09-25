@@ -27,5 +27,11 @@
     "karaokeGlowColor": "#00f0ff",
     "fontFamily": "Impact / Montserrat Black"
   },
-  "createdAt": "2026-09-11T00:46:21.576Z"
+  "createdAt": "2026-09-11T00:46:21.576Z",
+  "channelName": "Ranks POV Syndicate",
+  "voiceId": "POV_OPERATOR_V1",
+  "pacing": "fast",
+  "stylePrompt": "Hyper-realistic POV first-person perspective, neon dark cyberpunk, Unreal Engine 5 render style",
+  "scriptStructure": "5-Tier Gamified Progression",
+  "updatedAt": "2026-09-25T19:13:25.044Z"
 }

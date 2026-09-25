@@ -926,10 +926,10 @@ const server = http.createServer(async (req, res) => {
   // ==========================================
   // STAGE 3: Voice Design Studio & Timestamp Alignment Gate
   // ==========================================
-  if (pathname === "/api/voice/profiles" && req.method === "GET") {
+  if ((pathname === "/api/voice/profiles" || pathname === "/api/voice/personas") && req.method === "GET") {
     const profiles = voiceDesigner.getProfiles();
     res.writeHead(200, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ profiles }));
+    return res.end(JSON.stringify({ profiles, personas: profiles }));
   }
 
   if (pathname === "/api/voice/design-preview" && req.method === "POST") {

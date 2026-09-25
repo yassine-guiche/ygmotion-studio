@@ -6,6 +6,7 @@
 "use strict";
 
 let currentEpisode = "EP001";
+let currentEpisodeId = "EP001";
 let currentStyle = "crime_suspense";
 let episodeData = null;
 let allStyles = {};
@@ -1196,7 +1197,7 @@ function renderProjectsList() {
 
   allProjects.forEach(proj => {
     const card = document.createElement("div");
-    card.className = `channel-card ${proj.isActive ? "active-card" : ""}`;
+    card.className = `channel-card project-card ${proj.isActive ? "active-card" : ""}`;
     const primaryColor = proj.colorPalette?.primary || '#00f0ff';
     const thumbHtml = proj.thumbnail
       ? `<img src="${proj.thumbnail}" alt="${proj.name}">`
@@ -1785,6 +1786,7 @@ function openScriptGate(scriptData) {
 
   scriptData.scenes.forEach((scene, sIdx) => {
     const card = document.createElement("div");
+    card.className = "script-gate-scene-card";
     card.style.cssText = "padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);";
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -1861,7 +1863,7 @@ async function openVoiceGate() {
     voiceGateGrid.innerHTML = "";
     profiles.forEach(p => {
       const card = document.createElement("div");
-      card.className = "voice-profile-card";
+      card.className = "voice-profile-card voice-persona-card";
       card.style.cssText = "padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;";
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -1975,7 +1977,7 @@ function openSceneDirectorGate() {
     const durSec = chunk.durationSec || scene.estimatedDurationSec || 4.0;
 
     const card = document.createElement("div");
-    card.className = "scene-motion-card";
+    card.className = "scene-motion-card scene-director-card";
     card.style.cssText = "padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);";
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2463,7 +2465,7 @@ document.querySelectorAll(".modal-backdrop, .modal-overlay").forEach(modal => {
 });
 
 // Close active modal or drawer on Escape key press
-document.addEventListener("keydown", (e) => {
+function handleGlobalEscape(e) {
   if (e.key === "Escape") {
     document.querySelectorAll(".modal-backdrop, .modal-overlay").forEach(modal => {
       if (modal.style.display && modal.style.display !== "none") {
@@ -2472,6 +2474,8 @@ document.addEventListener("keydown", (e) => {
     });
     if (window.closeAiDirectorDrawer) window.closeAiDirectorDrawer();
   }
-});
+}
+window.addEventListener("keydown", handleGlobalEscape);
+document.addEventListener("keydown", handleGlobalEscape);
 
 

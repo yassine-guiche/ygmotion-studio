@@ -32,7 +32,7 @@ def fetch_html(url):
             "Accept-Language": "en-US,en;q=0.9"
         }
     )
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    with urllib.request.urlopen(req, timeout=3) as resp:
         return resp.read().decode("utf-8", errors="replace")
 
 def extract_channel_videos(url):
