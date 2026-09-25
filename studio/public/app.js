@@ -2050,8 +2050,7 @@ function renderIngestResults(bp) {
   document.getElementById("ingestChannelStats").textContent = `${bp.analyzedVideosCount || 30} Videos Analyzed • ${bp.subscribers || 'Active Audience'} • Solo Narrator Standard`;
   document.getElementById("ingestArchetypeBadge").textContent = bp.nicheInsights.archetypeName;
   document.getElementById("ingestPacingVal").textContent = `${bp.nicheInsights.pacingWpm} WPM`;
-  document.getElementById("ingestPacingDesc").textContent = bp.nicheInsights.pacingDescriptor;
-  document.getElementById("ingestMotionVal").textContent = bp.nicheInsights.archetype === 'stickman_animation' ? '2D Vector & Snap Zooms' : bp.nicheInsights.archetype === 'ranks_pov' ? '2.5D Push-In & HUD' : '2.5D Archival Float';
+  document.getElementById("ingestMotionVal").textContent = bp.nicheInsights.motionRecommendation || (bp.nicheInsights.archetype === 'crime_suspense' ? '2.5D Noir Push-In & Bodycam' : bp.nicheInsights.archetype === 'stickman_animation' ? '2D Vector & Snap Zooms' : bp.nicheInsights.archetype === 'ranks_pov' ? '2.5D Push-In & HUD' : '2.5D Archival Float');
   document.getElementById("ingestVoiceVal").textContent = bp.suggestedVoice.presetId;
   document.getElementById("ingestVoiceDesc").textContent = bp.suggestedVoice.tone;
   document.getElementById("ingestHookFormula").textContent = bp.nicheInsights.hookFormula;

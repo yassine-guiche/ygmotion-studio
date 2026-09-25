@@ -1,31 +1,47 @@
-
 /**
  * script_generator.js - AI Narrative Scriptwriting Engine
  * 
  * Generates structured, high-retention episodic scripts matching the scraped channel's
  * exact archetype, hook mechanics, retention pacing, and visual prompts.
+ * Powered by local Ollama AI (with high-intensity fallback narrative templates).
  */
 
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 
 class ScriptGenerator {
   /**
    * Generate an episode script matching a channel blueprint and topic
    */
   async generateScript({ blueprint, topic, targetDurationMin = 3 }) {
-    const archetype = blueprint?.nicheInsights?.archetype || 'ranks_pov';
-    const pacingWpm = blueprint?.nicheInsights?.pacingWpm || 165;
+    const archetype = blueprint?.nicheInsights?.archetype || 'crime_suspense';
+    const pacingWpm = blueprint?.nicheInsights?.pacingWpm || 160;
     const title = typeof topic === 'string' ? topic : topic?.title || "Untold Story";
 
     let scenes = [];
 
-    if (archetype === 'ranks_pov') {
-      scenes = this._generateRanksPovScript(title, topic, pacingWpm);
-    } else if (archetype === 'stickman_animation') {
-      scenes = this._generateStickmanScript(title, topic, pacingWpm);
-    } else {
-      scenes = this._generateDocumentaryScript(title, topic, pacingWpm);
+    // 1. Try local Ollama LLM for bespoke AI scriptwriting first
+    try {
+      const aiScenes = await this._queryOllamaScript(title, topic, archetype, pacingWpm);
+      if (aiScenes && aiScenes.length >= 4) {
+        scenes = aiScenes;
+      }
+    } catch (e) {
+      console.warn("Ollama script generation fallback to template:", e.message);
+    }
+
+    // 2. High-Fidelity Archetype Script Generators Fallback
+    if (!scenes || scenes.length === 0) {
+      if (archetype === 'crime_suspense') {
+        scenes = this._generateCrimeSuspenseScript(title, topic, pacingWpm);
+      } else if (archetype === 'ranks_pov') {
+        scenes = this._generateRanksPovScript(title, topic, pacingWpm);
+      } else if (archetype === 'stickman_animation') {
+        scenes = this._generateStickmanScript(title, topic, pacingWpm);
+      } else {
+        scenes = this._generateDocumentaryScript(title, topic, pacingWpm);
+      }
     }
 
     const totalWords = scenes.reduce((acc, s) => acc + s.wordsCount, 0);
@@ -39,6 +55,188 @@ class ScriptGenerator {
       estimatedDurationSec: totalDurationSec,
       scenes
     };
+  }
+
+  /**
+   * Query local Ollama for bespoke structured scene scripts
+   */
+  _queryOllamaScript(title, topic, archetype, wpm) {
+    return new Promise((resolve) => {
+      const hook = topic?.hook || "";
+      const prompt = `You are a master YouTube storytelling scriptwriter.
+Write an intensely gripping, high-retention 6-to-8 scene episodic video script.
+Title: "${title}"
+Genre/Archetype: ${archetype}
+Initial Hook Context: "${hook}"
+Pacing: ${wpm} WPM
+
+Return ONLY a valid JSON array of scenes without backticks, matching this exact schema:
+[
+  {
+    "partIndex": 1,
+    "title": "Part 1: The Cold Hook",
+    "text": "Intensely engaging voiceover narration text (2 to 4 sentences)...",
+    "visualPrompt": "Photorealistic 16:9 cinematic visual description for AI image generation...",
+    "cameraMotion": "push_in",
+    "audioMood": "dark_tension_drone"
+  }
+]`;
+
+      const payload = JSON.stringify({
+        model: "qwen2.5-coder:7b",
+        prompt,
+        stream: false,
+        options: {
+          temperature: 0.5,
+          num_predict: 1200
+        }
+      });
+
+      const req = http.request({
+        host: "127.0.0.1",
+        port: 11434,
+        path: "/api/generate",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(payload)
+        },
+        timeout: 6000
+      }, (res) => {
+        let data = "";
+        res.on("data", chunk => { data += chunk; });
+        res.on("end", () => {
+          try {
+            const parsed = JSON.parse(data);
+            let rawText = parsed.response || "";
+            rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+            const start = rawText.indexOf("[");
+            const end = rawText.lastIndexOf("]");
+            if (start !== -1 && end !== -1) {
+              const jsonStr = rawText.slice(start, end + 1);
+              const scenes = JSON.parse(jsonStr);
+              if (Array.isArray(scenes) && scenes.length >= 4) {
+                const processed = scenes.map((s, idx) => {
+                  const words = (s.text || "").split(/\s+/).length;
+                  return {
+                    partIndex: idx + 1,
+                    title: s.title || `Part ${idx + 1}`,
+                    text: s.text,
+                    visualPrompt: s.visualPrompt || "Cinematic 35mm film still, dramatic lighting, 8k",
+                    cameraMotion: s.cameraMotion || "push_in",
+                    audioMood: s.audioMood || "tension_ambient",
+                    wordsCount: words,
+                    estimatedDurationSec: parseFloat((words / (wpm / 60)).toFixed(1))
+                  };
+                });
+                return resolve(processed);
+              }
+            }
+            resolve(null);
+          } catch (e) {
+            resolve(null);
+          }
+        });
+      });
+
+      req.on("error", () => resolve(null));
+      req.on("timeout", () => {
+        req.destroy();
+        resolve(null);
+      });
+
+      req.write(payload);
+      req.end();
+    });
+  }
+
+  /**
+   * True Crime & Police Bodycam Suspense Formula
+   */
+  _generateCrimeSuspenseScript(title, topic, wpm) {
+    const hookLine = topic?.hook || `At 2:14 AM on an unpaved county backroad, Officer Miller called in a routine abandoned vehicle. Five minutes later, his bodycam audio recorded what dispatch couldn't explain.`;
+    const acts = topic?.tiers || [
+      "Act 1: The Midnight Call",
+      "Act 2: The Red Flags in the Trunk",
+      "Act 3: The Ambush in the Dark",
+      "Act 4: The Bodycam Breakdown"
+    ];
+
+    const scenes = [
+      {
+        partIndex: 1,
+        title: "Part 1: The Cold Open & Dispatch",
+        text: hookLine,
+        visualPrompt: "Cinematic 35mm film still, police cruiser dashboard camera at night, red and blue strobe lights reflecting on rain-slicked asphalt, dark desolate highway, Kodak Vision3 500T, high suspense",
+        cameraMotion: "push_in",
+        audioMood: "radio_static_chilling_drone"
+      },
+      {
+        partIndex: 2,
+        title: `Part 2: ${acts[0] || "The Approach & Bodycam Timestamp"}`,
+        text: `The cruiser's spotlight cuts through the heavy downpour. Deputy Miller steps out, flashlight beam cutting the steam rising from the abandoned sedan's hood. The engine is still warm, but the driver's side door is standing wide open. In the mud beside the tire, two sets of fresh boot prints lead directly toward the tree line.`,
+        visualPrompt: "First person bodycam POV, tactical flashlight beam illuminating muddy tire tracks and open car door in rainstorm, timestamp HUD in corner, intense cinematic realism",
+        cameraMotion: "tilt_up_down",
+        audioMood: "heartbeat_pulse_deep"
+      },
+      {
+        partIndex: 3,
+        title: "Part 3: The First Red Flag",
+        text: `Standard protocol says wait for backup. But when Miller shines his beam onto the back seat, he spots an open leather notebook, a pair of zip-ties, and a city map with three addresses circled in red marker. None of the names on the registration match the area code of the phone buzzing endlessly on the center console.`,
+        visualPrompt: "Close up police flashlight beam resting on back seat of car, leather notebook and circled city map, rain beating against car window, gritty noir lighting",
+        cameraMotion: "pan_left_right",
+        audioMood: "dark_tension_riser"
+      },
+      {
+        partIndex: 4,
+        title: `Part 4: ${acts[1] || "The Escalation in the Woods"}`,
+        text: `Miller clicks his radio mic to request immediate county backup. Just as dispatch acknowledges, the audio cuts into shrill feedback. Forty yards into the pines, a sharp metallic click breaks the silence, followed by the sound of boots crushing wet twigs in rapid succession.`,
+        visualPrompt: "Low-angle cinematic view of dense pine woods at night, tactical officer silhouette holding duty light, ominous fog drifting between trees, deep shadow contrast",
+        cameraMotion: "push_in",
+        audioMood: "sharp_suspense_string_hit"
+      },
+      {
+        partIndex: 5,
+        title: `Part 5: ${acts[2] || "The Confrontation & Takedown"}`,
+        text: `'Sheriff's department, step out with your hands where I can see them!' The command echoes through the timber. For three agonizing seconds, nothing moves. Then, a figure bolts from behind an oak trunk toward the ravine. Miller engages in pursuit, mud churning beneath his boots as adrenaline redlines.`,
+        visualPrompt: "Dynamic bodycam action shot, running through dark misty woods, swaying flashlight beam revealing fleeing silhouette in distance, motion blur, visceral realism",
+        cameraMotion: "camera_shake",
+        audioMood: "rapid_percussion_chase"
+      },
+      {
+        partIndex: 6,
+        title: `Part 6: ${acts[3] || "The Smoking Gun & Confession"}`,
+        text: `By 3:30 AM, secondary units surround the perimeter. When investigators pry open the false floor beneath the suspect's trunk, they uncover what this individual was desperate to conceal: three stolen police radios, an encrypted satellite relay, and a manifest detailing coordinated drops across four neighboring counties.`,
+        visualPrompt: "Forensic evidence scene, yellow evidence placards on wet asphalt, opened vehicle trunk with tactical gear and radios illuminated by halogen crime scene lamps",
+        cameraMotion: "parallax_float",
+        audioMood: "deep_revelation_drone"
+      },
+      {
+        partIndex: 7,
+        title: "Part 7: The Interrogation Room",
+        text: `Inside interrogation room 4, twelve hours later. The suspect sits handcuffed to the bolt in the table, refusing water and refusing to speak. Until Lead Detective Vance slides a single surveillance photo across the table, showing the suspect's face clearly at the exact moment the perimeter sensors were tripped.`,
+        visualPrompt: "Gritty neo-noir interrogation room, single overhead fluorescent light fixture, handcuffed suspect in silhouette across metal table from seasoned detective, smoke haze",
+        cameraMotion: "push_in",
+        audioMood: "sub_bass_dread"
+      },
+      {
+        partIndex: 8,
+        title: "Part 8: The Chilling Verdict",
+        text: `The case pulled back the curtain on an organized syndicate operating in plain sight for over seven years. Some crimes are caught by high-tech algorithms. But most unravel because of a single officer on an empty road noticing the one detail that didn't belong. If you want more real police investigations and tactical breakdowns, subscribe and drop your thoughts in the comments.`,
+        visualPrompt: "Cinematic wide shot of courthouse steps at sunrise, lone detective looking toward horizon, cool dawn blue and gold morning light, Leica 35mm film aesthetic",
+        cameraMotion: "zoom_out",
+        audioMood: "fading_cinematic_outro"
+      }
+    ];
+
+    return scenes.map(s => {
+      const words = s.text.split(/\s+/).length;
+      return {
+        ...s,
+        wordsCount: words,
+        estimatedDurationSec: parseFloat((words / (wpm / 60)).toFixed(1))
+      };
+    });
   }
 
   _generateRanksPovScript(title, topic, wpm) {
@@ -113,7 +311,7 @@ class ScriptGenerator {
         text: `You pull the leather chair out, sit down, and place your palms flat on the glass desk. Welcome to Level 100. If you survived this far, subscribe and tell me in the comments what rank you would tap out at.`,
         visualPrompt: "First person POV hands resting firmly on executive glass desk, city skyline at night through floor to ceiling windows, sleek cyber aesthetic",
         cameraMotion: "push_in",
-        audioMood: "outro_synth_wave"
+        audioMood: "heavy_bass_outro"
       }
     ];
 
@@ -128,72 +326,56 @@ class ScriptGenerator {
   }
 
   _generateStickmanScript(title, topic, wpm) {
-    const hookLine = topic?.hook || `Most people start a project with careful research. I started this because I made a bet after three cups of espresso.`;
+    const hookLine = topic?.hook || `Most people start a business with a business plan. I started a business because I lied on a resume and the client immediately wired half a million dollars.`;
 
     const scenes = [
       {
         partIndex: 1,
         title: "Part 1: The Confession",
         text: hookLine,
-        visualPrompt: "Minimalist 2D vector stick figure sitting with head in hands at messy wooden desk, coffee cup tipped over, chalkboard background, clean Casually Explained aesthetic",
-        cameraMotion: "push_in",
-        audioMood: "quirky_acoustic_intro"
+        visualPrompt: "2D minimalist vector stickman with round white head and wide panic eyes, sitting at messy wooden desk staring at a glowing laptop screen with huge dollar balance, chalkboard background",
+        cameraMotion: "snap_zoom",
+        audioMood: "quirky_pizzicato_strings"
       },
       {
         partIndex: 2,
-        title: "Part 2: The Terrible Plan",
-        text: `Here was the genius plan. Step one: pretend I was an industry expert with ten years of enterprise consulting experience. Step two: figure out what enterprise consulting actually means before Monday morning.`,
-        visualPrompt: "2D stick figure holding giant blueprint with comically confusing squiggles, question marks floating above head, minimalist animation style",
+        title: "Part 2: The Terrible Decision",
+        text: `Now, a normal human would call the client, apologize, and return the wire transfer. But I am not a normal human. I am an idiot with high-speed internet and six hours before the kickoff call. So I did what anyone would do: I Googled 'how to sound like a senior enterprise consultant in thirty minutes.'`,
+        visualPrompt: "Stickman frantic typing on laptop with speed lines, twelve open tabs floating around his head, coffee cup spilling, clean vector art",
         cameraMotion: "pan_left_right",
-        audioMood: "puzzled_plink_melody"
+        audioMood: "fast_ticking_clock"
       },
       {
         partIndex: 3,
         title: "Part 3: The Pitch",
-        text: `On Monday, I wore the only collared shirt I owned. I opened the presentation with fifty buzzwords I found on LinkedIn. Synergy, paradigm shift, quantum scalability. The CEO nodded like I was reciting Shakespeare.`,
-        visualPrompt: "2D stick figure in ill-fitting oversized tie standing next to chart pointing upward, boardroom stick figures with speech bubbles of thumbs up",
-        cameraMotion: "zoom_out",
-        audioMood: "cheerful_bossa_rhythm"
+        text: `The meeting starts. Five people in bespoke suits appear on my webcam. I look like I haven't slept since Tuesday. I open my presentation, clear my throat, and say the most confident nonsense in human history: 'We need to leverage synergistic omnichannel velocity.' They took notes. All of them.`,
+        visualPrompt: "Stickman wearing a comical paper necktie, gesturing dramatically at a graph with squiggly lines that go straight up, suited silhouettes nodding, minimal flat cartoon aesthetic",
+        cameraMotion: "push_in",
+        audioMood: "comedic_suspense_piano"
       },
       {
         partIndex: 4,
-        title: "Part 4: The Escalation",
-        text: `Then came the catastrophe. They didn't just like the pitch. They approved the entire multi-million dollar implementation and assigned fifty senior engineers to report directly to me by noon.`,
-        visualPrompt: "2D stick figure sweating profusely, giant crowd of 50 stick figures staring with clipboards, exclamation marks, comedic tension",
+        title: "Part 4: The Downward Spiral",
+        text: `By month two, things got out of hand. I hired three freelancers from three different continents to do the work I was supposed to be doing. None of them spoke the same language, but through the magic of emojis and Google Translate, we accidentally built an actual software product that worked.`,
+        visualPrompt: "Stickman juggling three glowing server icons with panicked face sweat drops, globe in background with dotted communication lines, pop art color accents",
         cameraMotion: "camera_shake",
-        audioMood: "sudden_record_scratch"
+        audioMood: "upbeat_chaotic_drums"
       },
       {
         partIndex: 5,
-        title: "Part 5: The Cover-up",
-        text: `For the next forty-eight hours, I locked myself in the supply closet googling basic computer science terminology while pretending I was on urgent international stakeholder calls.`,
-        visualPrompt: "2D stick figure cramped inside tiny broom closet surrounded by mops, laptop screen glowing in the dark, animated eye twitches",
-        cameraMotion: "push_in",
-        audioMood: "ticking_clock_beat"
+        title: "Part 5: The Climax",
+        text: `Then came the compliance audit. A German auditor named Hans scheduled a site visit. Our registered office was my mother's guest bedroom. I had forty-eight hours to turn a room decorated with floral curtains and stuffed bears into an international headquarters.`,
+        visualPrompt: "Stickman furiously painting over floral wallpaper with gray paint, teddy bears stuffed into a closet, frantic cartoon comedy",
+        cameraMotion: "tilt_up_down",
+        audioMood: "rapid_march_percussion"
       },
       {
         partIndex: 6,
-        title: "Part 6: The Miracle",
-        text: `And somehow, through sheer accidental luck, the solution I randomly suggested during a panic attack fixed their three-year database bug in twelve minutes. They thought I was a certified genius.`,
-        visualPrompt: "2D stick figure wearing gold crown, angels singing, confetti falling, server rack turning bright green, hilarious triumphant vector art",
+        title: "Part 6: The Punchline",
+        text: `The moral of the story? Fake it until you make it isn't career advice. It's a medical condition characterized by elevated cortisol and spontaneous sweating. Subscribe for more life advice you should never follow, and leave your worst workplace lie in the comments.`,
+        visualPrompt: "Stickman sipping coffee calmly while room behind him is on fire, relaxed shrug expression, classic meme energy, chalkboard aesthetic",
         cameraMotion: "zoom_out",
-        audioMood: "triumphant_trumpet_fanfare"
-      },
-      {
-        partIndex: 7,
-        title: "Part 7: The Moral",
-        text: `The lesson here is simple. Imposter syndrome is completely natural, because sometimes you genuinely have no idea what you're doing. But confidence and a decent haircut will carry you surprisingly far.`,
-        visualPrompt: "2D stick figure shrugging with cheerful wink at camera, neat vector illustration, minimalist clean lines",
-        cameraMotion: "tilt_up_down",
-        audioMood: "warm_acoustic_outro"
-      },
-      {
-        partIndex: 8,
-        title: "Part 8: The Sign-off",
-        text: `Hit like if you've ever bluffed your way through a meeting, and subscribe before my former clients find this video.`,
-        visualPrompt: "2D stick figure running away from angry corporate logo, subscribe button animation, comic timing",
-        cameraMotion: "push_in",
-        audioMood: "comedic_pop_hit"
+        audioMood: "funny_cymbal_crash_outro"
       }
     ];
 
