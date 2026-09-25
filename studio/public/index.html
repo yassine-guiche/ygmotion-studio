@@ -534,17 +534,16 @@
           <label>Tag / Category Badge</label>
           <input type="text" id="brandTag" class="form-input" placeholder="e.g. POV RANKS, STICKMAN 2D, DEEP DOC">
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div class="form-group">
-            <label>Visual Pipeline</label>
-            <select id="brandVisualPipeline" class="form-input">
-              <option value="cyber_pov">⚡ First-Person POV HUD (Cyber)</option>
-              <option value="stickman_2d">✏️ Stickman 2D Animation</option>
-              <option value="archival_documentary">📜 Archival 2.5D Parallax Doc</option>
-              <option value="realistic_cinematic">🎬 Photorealistic 35mm Film</option>
-              <option value="custom">🎨 Custom Creative Pipeline</option>
-            </select>
-          </div>
+        <div class="form-group">
+          <label>Visual Pipeline</label>
+          <select id="brandVisualPipeline" class="form-input">
+            <option value="cyber_pov">⚡ First-Person POV HUD (Cyber)</option>
+            <option value="stickman_2d">✏️ Stickman 2D Animation</option>
+            <option value="archival_documentary">📜 Archival 2.5D Parallax Doc</option>
+            <option value="realistic_cinematic">🎬 Photorealistic 35mm Film</option>
+            <option value="custom">🎨 Custom Creative Pipeline</option>
+          </select>
+        </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
           <div class="form-group">
             <label>Speaker Architecture</label>
@@ -797,7 +796,7 @@
   </div>
 
   <!-- New Channel Project Wizard Modal -->
-  <div class="modal-overlay" id="newProjectModal">
+  <div class="modal-overlay" id="newProjectModal" style="display: none;">
     <div class="modal-container" style="max-width: 680px;">
       <div class="modal-header">
         <div class="modal-title-row">
@@ -899,7 +898,7 @@
   </div>
 
   <!-- Open External Channel Folder Modal -->
-  <div class="modal-overlay" id="openFolderModal">
+  <div class="modal-overlay" id="openFolderModal" style="display: none;">
     <div class="modal-container" style="max-width: 550px;">
       <div class="modal-header">
         <div class="modal-title-row">
@@ -928,7 +927,7 @@
   </div>
 
   <!-- Delete Channel Project Confirmation Modal -->
-  <div class="modal-overlay" id="deleteProjectModal">
+  <div class="modal-overlay" id="deleteProjectModal" style="display: none;">
     <div class="modal-container" style="max-width: 500px; border-color: rgba(239, 68, 68, 0.4);">
       <div class="modal-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
         <div class="modal-title-row">
@@ -961,7 +960,7 @@
   <!-- ========================================== -->
   <!-- 1. CHANNEL INGESTION & NICHE ANALYZER MODAL -->
   <!-- ========================================== -->
-  <div class="modal-overlay" id="channelIngestionModal">
+  <div class="modal-overlay" id="channelIngestionModal" style="display: none;">
     <div class="modal-container" style="max-width: 850px; max-height: 90vh;">
       <div class="modal-header">
         <div class="modal-title-row">
@@ -1072,7 +1071,7 @@
   <!-- ========================================== -->
   <!-- 2. HUMAN-IN-THE-LOOP SCRIPT EDITOR GATE 1  -->
   <!-- ========================================== -->
-  <div class="modal-overlay" id="scriptGateModal">
+  <div class="modal-overlay" id="scriptGateModal" style="display: none;">
     <div class="modal-container" style="max-width: 900px; max-height: 90vh;">
       <div class="modal-header">
         <div class="modal-title-row">
@@ -1125,7 +1124,7 @@
   <!-- ========================================== -->
   <!-- 3. VOICE DESIGN STUDIO GATE 2              -->
   <!-- ========================================== -->
-  <div class="modal-overlay" id="voiceGateModal">
+  <div class="modal-overlay" id="voiceGateModal" style="display: none;">
     <div class="modal-container" style="max-width: 800px; max-height: 90vh;">
       <div class="modal-header">
         <div class="modal-title-row">
@@ -1187,7 +1186,7 @@
   <!-- ========================================== -->
   <!-- 4. SCENE & MOTION DIRECTOR GATE 3         -->
   <!-- ========================================== -->
-  <div class="modal-overlay" id="sceneDirectorModal">
+  <div class="modal-overlay" id="sceneDirectorModal" style="display: none;">
     <div class="modal-container" style="max-width: 950px; max-height: 90vh;">
       <div class="modal-header">
         <div class="modal-title-row">

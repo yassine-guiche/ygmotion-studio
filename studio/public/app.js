@@ -2450,4 +2450,28 @@ function initAiCoDirector() {
   }
 }
 
+// ==========================================
+// GLOBAL DIALOG & MODAL UX ENHANCEMENTS
+// ==========================================
+// Close any modal when clicking directly on its outer backdrop or overlay
+document.querySelectorAll(".modal-backdrop, .modal-overlay").forEach(modal => {
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+});
+
+// Close active modal or drawer on Escape key press
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    document.querySelectorAll(".modal-backdrop, .modal-overlay").forEach(modal => {
+      if (modal.style.display && modal.style.display !== "none") {
+        modal.style.display = "none";
+      }
+    });
+    if (window.closeAiDirectorDrawer) window.closeAiDirectorDrawer();
+  }
+});
+
 
