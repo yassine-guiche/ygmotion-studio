@@ -5,7 +5,10 @@
   "main": "studio/server.js",
   "scripts": {
     "start": "node studio/server.js",
-    "dev": "node studio/server.js"
+    "dev": "node studio/server.js",
+    "pipeline": "node engine/scripts/pipeline.js",
+    "capcut": "node engine/scripts/build_capcut_project.js",
+    "render": "node engine/scripts/render_video.js"
   },
   "keywords": [
     "youtube-automation",

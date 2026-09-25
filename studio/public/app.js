@@ -2108,7 +2108,7 @@ if (btnConfirmSceneDirector) {
       sceneDirectorModal.style.display = "none";
       showEditor();
       
-      const renderBtn = document.getElementById("renderEpisodeBtn");
+      const renderBtn = document.getElementById("triggerRenderBtn") || document.getElementById("renderEpisodeBtn");
       if (renderBtn) {
         renderBtn.click();
       } else {

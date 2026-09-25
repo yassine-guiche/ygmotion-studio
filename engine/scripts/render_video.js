@@ -112,15 +112,30 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   console.log("=======================================================\n");
 
   // 1. Locate Audio Master
-  let audioFile = path.join(audioDir, `${episodeId.toLowerCase()}_mixed_master.mp3`);
-  if (!fs.existsSync(audioFile)) {
-    audioFile = path.join(audioDir, "ep001_mixed_master.mp3");
+  const audioCandidates = [
+    path.join(audioDir, `${episodeId.toLowerCase()}_mixed_master.mp3`),
+    path.join(audioDir, "ep001_mixed_master.mp3"),
+    path.join(audioDir, "ep001_full_speech_track.mp3"),
+    path.join(epDir, "audio_master.mp3"),
+    path.join(epDir, "master_voiceover.mp3"),
+    path.join(ROOT_DIR, "projects", "crime_chronicles", "episodes", "EP001", "audio", "ep001_mixed_master.mp3")
+  ];
+
+  let audioFile = null;
+  for (const c of audioCandidates) {
+    if (fs.existsSync(c)) {
+      audioFile = c;
+      break;
+    }
   }
-  if (!fs.existsSync(audioFile)) {
-    audioFile = path.join(audioDir, "ep001_full_speech_track.mp3");
+
+  if (!audioFile && fs.existsSync(audioDir)) {
+    const mp3s = fs.readdirSync(audioDir).filter(f => f.endsWith(".mp3") || f.endsWith(".wav"));
+    if (mp3s.length > 0) audioFile = path.join(audioDir, mp3s[0]);
   }
-  if (!fs.existsSync(audioFile)) {
-    throw new Error(`Master audio not found in ${audioDir}`);
+
+  if (!audioFile) {
+    throw new Error(`Master audio not found in ${audioDir} or fallback paths.`);
   }
 
   const totalDuration = getMediaDuration(ffprobe, audioFile) || 610.7;
@@ -184,6 +199,31 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
         targetDurationSec: durPerShot
       });
       calculatedTotalDur += durPerShot;
+    }
+  }
+
+  if (plannedShots.length === 0) {
+    console.warn("\n[WARN] No footage shots found on disk. Synthesizing visual sequence from Master Style References...");
+    const masterStyleCandidates = [
+      path.join(projDir, "channel_assets", "style", "master_style_reference_16x9.jpg"),
+      path.join(epDir, "channel_assets", "style", "master_style_reference_16x9.jpg"),
+      path.join(ROOT_DIR, "channel_assets", "style", "master_style_reference_16x9.jpg"),
+      path.join(ROOT_DIR, "projects", "crime_chronicles", "channel_assets", "style", "master_style_reference_16x9.jpg")
+    ];
+    let fallbackImg = masterStyleCandidates.find(c => fs.existsSync(c));
+
+    if (fallbackImg) {
+      const shotCount = 8;
+      const durPerShot = totalDuration / shotCount;
+      for (let i = 0; i < shotCount; i++) {
+        plannedShots.push({
+          shotId: `shot_${String(i + 1).padStart(3, "0")}`,
+          absPath: fallbackImg,
+          isImage: true,
+          targetDurationSec: durPerShot
+        });
+      }
+      calculatedTotalDur = totalDuration;
     }
   }
 
@@ -278,27 +318,36 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   const subPathEscaped = subFile ? subFile.replace(/\\/g, "/").replace(/:/g, "\\:") : null;
   const finalVf = subPathEscaped ? `subtitles='${subPathEscaped}'` : null;
 
-  const finalArgs = [
-    "-y",
-    "-f", "concat",
-    "-safe", "0",
-    "-i", concatListPath,
-    "-i", audioFile
-  ];
+  const buildFinalArgs = (vf) => {
+    const a = [
+      "-y",
+      "-f", "concat",
+      "-safe", "0",
+      "-i", concatListPath,
+      "-i", audioFile
+    ];
+    if (vf) a.push("-vf", vf);
+    a.push(
+      ...encoder.args,
+      "-c:a", "aac",
+      "-b:a", "192k",
+      "-t", totalDuration.toFixed(2),
+      finalOutputPath
+    );
+    return a;
+  };
 
-  if (finalVf) {
-    finalArgs.push("-vf", finalVf);
+  try {
+    await runCommandAsync(ffmpeg, buildFinalArgs(finalVf));
+  } catch (err) {
+    if (finalVf) {
+      console.warn("\n[WARN] Subtitle filter failed (libass/font issue). Retrying without subtitles for clean video...");
+      await runCommandAsync(ffmpeg, buildFinalArgs(null));
+      console.log("  ✓ Clean 1080p video rendered successfully!");
+    } else {
+      throw err;
+    }
   }
-
-  finalArgs.push(
-    ...encoder.args,
-    "-c:a", "aac",
-    "-b:a", "192k",
-    "-t", totalDuration.toFixed(2),
-    finalOutputPath
-  );
-
-  await runCommandAsync(ffmpeg, finalArgs);
 
   // Clean up tmp files
   try {
