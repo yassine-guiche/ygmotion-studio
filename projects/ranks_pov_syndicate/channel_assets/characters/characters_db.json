@@ -1,0 +1,18 @@
+{
+  "pov_player": {
+    "id": "pov_player",
+    "name": "The Player (First Person POV)",
+    "role": "POV Subject",
+    "seed": 771920,
+    "visualDescription": "First person hands wearing black tactical gloves, holding steering wheel or holographic device, POV perspective",
+    "portrait_url": null
+  },
+  "syndicate_boss": {
+    "id": "syndicate_boss",
+    "name": "The Handler / Boss",
+    "role": "Antagonist / Questgiver",
+    "seed": 448190,
+    "visualDescription": "50-year-old mysterious man in tailored Italian charcoal suit, sitting in penthouse shadow, glass of whiskey, menacing gaze",
+    "portrait_url": null
+  }
+}

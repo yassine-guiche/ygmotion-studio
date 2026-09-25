@@ -1,0 +1,31 @@
+{
+  "id": "ranks_pov_syndicate",
+  "name": "Ranks POV Syndicate",
+  "category": "ranks_pov",
+  "tag": "POV RANKS",
+  "description": "Inspired by @ranksofficiel. Tier-by-tier life progression, level-up HUD badges, immersive first-person POV storytelling, high-stakes consequences.",
+  "visualPipeline": "cyber_pov",
+  "colorPalette": {
+    "primary": "#00f0ff",
+    "background": "#08090d",
+    "accent": "#ff0055",
+    "text": "#ffffff"
+  },
+  "defaultStylePrompt": "Hyper-realistic POV first-person perspective, neon dark cyberpunk, Unreal Engine 5 render style",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "pov_hands_hud",
+  "voiceProfile": {
+    "voiceId": "POV_OPERATOR_V1",
+    "voiceName": "POV Solo Narrator",
+    "pacing": "fast",
+    "tone": "Gritty & Punchy"
+  },
+  "scriptFormula": "5-Tier Gamified Progression",
+  "audioProfile": {
+    "bgmDuckDb": -16,
+    "sfxLevelDb": -10,
+    "karaokeGlowColor": "#00f0ff",
+    "fontFamily": "Impact / Montserrat Black"
+  },
+  "createdAt": "2026-09-11T00:46:21.576Z"
+}

@@ -1,0 +1,55 @@
+{
+  "id": "stickman_confessions",
+  "name": "Stickman Confessions",
+  "category": "stickman_animation",
+  "tag": "STICKMAN 2D",
+  "description": "Viral minimalist stick figure storytelling inspired by Casually Explained, Kurzgesagt, and MinutePhysics. High-retention expressive characters, chalkboard/clean backgrounds, fast comedic or deep philosophical pacing.",
+  "visualPipeline": "stickman_2d",
+  "colorPalette": {
+    "primary": "#ffd166",
+    "background": "#141419",
+    "accent": "#06d6a0",
+    "text": "#ffffff"
+  },
+  "defaultStylePrompt": "2D minimalist vector animation art, bold clean black stick figure with expressive white round head and dramatic eyes, dark minimalist chalkboard aesthetic, flat 2D vector graphics, clean lines, vibrant pop color accents, professional webtoon style",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "stick_avatar",
+  "voiceProfile": {
+    "voiceId": "STICKMAN_HERO",
+    "voiceName": "Stickman Solo Narrator",
+    "pacing": "fast",
+    "tone": "Casual Comedic Sarcasm"
+  },
+  "scriptFormula": "3-Act Comedic Confession",
+  "audioProfile": {
+    "bgmDuckDb": -14,
+    "sfxLevelDb": -8,
+    "karaokeGlowColor": "#ffd166",
+    "fontFamily": "Comic Sans Neue / Fredoka One / Montserrat"
+  },
+  "createdAt": "2026-09-11T00:47:20.749Z",
+  "stickmanProps": [
+    "Coffee Cup",
+    "Broken Computer",
+    "Gym Bag",
+    "Police Siren Cartoon"
+  ],
+  "defaultCharacters": [
+    {
+      "id": "stick_protagonist",
+      "name": "Stickman (Protagonist)",
+      "role": "Narrator / Hero",
+      "seed": 102938,
+      "visualDescription": "Minimalist clean stick figure with expressive oversized comic eyes, blue beanie, expressive stick hands",
+      "portrait_url": null
+    },
+    {
+      "id": "stick_friend",
+      "name": "Stick Friend",
+      "role": "Panicking Buddy",
+      "seed": 583921,
+      "visualDescription": "Stick figure with sweat drops flying off head, wide terrified cartoon eyes, clutching a black box",
+      "portrait_url": null
+    }
+  ]
+}

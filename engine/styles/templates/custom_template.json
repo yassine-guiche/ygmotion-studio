@@ -1,0 +1,34 @@
+{
+  "id": "custom",
+  "name": "Custom Creator Blueprint",
+  "category": "custom",
+  "tag": "CUSTOM",
+  "description": "Design your own custom storytelling channel from scratch. Define bespoke visual styles, voiceover personas, and narrative script formulas.",
+  "visualPipeline": "custom",
+  "colorPalette": {
+    "primary": "#8b5cf6",
+    "background": "#0d1117",
+    "accent": "#00f0ff",
+    "text": "#ffffff"
+  },
+  "defaultStylePrompt": "High production value digital artwork, cinematic atmospheric lighting, intricate details, masterwork quality --ar 16:9",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "voiceover_only",
+  "voiceProfile": {
+    "voiceId": "CUSTOM_CREATOR_VOICE",
+    "voiceName": "Custom Storyteller",
+    "tone": "Engaging & Dynamic",
+    "pacing": "moderate"
+  },
+  "scriptFormula": {
+    "structureName": "Custom Narrative Blueprint",
+    "instructions": "Dynamic Custom Hook -> Story Premise -> Rising Action -> Climax -> Takeaway Call-to-Action"
+  },
+  "audioProfile": {
+    "bgmDuckDb": -16,
+    "sfxLevelDb": -10,
+    "karaokeGlowColor": "#8b5cf6",
+    "fontFamily": "Montserrat Black"
+  },
+  "defaultCharacters": []
+}

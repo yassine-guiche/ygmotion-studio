@@ -1,0 +1,10 @@
+{
+  "subject_profile": {
+    "id": "subject_profile",
+    "name": "Investigation Target",
+    "role": "Documentary Subject",
+    "seed": 654321,
+    "visualDescription": "Black and white classified FBI file photo with red marker annotations, forensic stamp, paper clip",
+    "portrait_url": null
+  }
+}

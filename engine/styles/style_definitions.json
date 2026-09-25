@@ -1,0 +1,299 @@
+{
+  "crime_suspense": {
+    "id": "crime_suspense",
+    "name": "True Crime & Midnight Suspense",
+    "description": "Moody, low-key lighting, desaturated cinema tones, intense heartbeat and siren foley. High adrenaline retention.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.18:saturation=0.82:brightness=-0.02,vignette=angle=PI/5",
+      "tone": "Cold Teal & Dark Shadow",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Montserrat ExtraBold",
+      "fontSize": 72,
+      "primaryColor": "&H00FFFFFF",
+      "highlightColor": "&H00FFE600",
+      "outlineColor": "&H00000000",
+      "backColor": "&H80000000",
+      "outline": 4,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 120
+    },
+    "pacing": {
+      "avgShotDurationSec": 4.5,
+      "hookShotDurationSec": 2.8,
+      "motion": "zoom_pulse"
+    },
+    "audioProfile": {
+      "musicMood": "dark_suspense_drone",
+      "sfxTypes": ["heartbeat_sub", "police_siren", "car_door", "radio_squawk", "tension_riser"],
+      "duckingDb": -18
+    },
+    "searchTags": ["moody night", "dark car interior", "police lights", "empty highway night", "suspense shadow"]
+  },
+  "documentary_history": {
+    "id": "documentary_history",
+    "name": "High-End Documentary (Magnates & Fern)",
+    "description": "Warm archival tones, Kodak 2383 film look, paper textures, elegant typography, and steady 2.5D parallax drift.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.12:saturation=0.90:brightness=0.01,curves=all='0/0 0.18/0.12 0.5/0.48 1/0.95',vignette=angle=PI/6",
+      "tone": "Warm Amber & Archival Sepia",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Outfit",
+      "fontSize": 68,
+      "primaryColor": "&H00F0F4F8",
+      "highlightColor": "&H0038BDF8",
+      "outlineColor": "&H00050810",
+      "backColor": "&H60000000",
+      "outline": 3,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 110
+    },
+    "pacing": {
+      "avgShotDurationSec": 5.2,
+      "hookShotDurationSec": 3.2,
+      "motion": "ken_burns_drift"
+    },
+    "audioProfile": {
+      "musicMood": "orchestral_investigation_strings",
+      "sfxTypes": ["clock_tick", "camera_shutter", "paper_rustle", "deep_cellos", "vintage_projector"],
+      "duckingDb": -19
+    },
+    "searchTags": ["archival history", "vintage document", "old film reel", "museum archive", "retro cinematic"]
+  },
+  "finance_tech": {
+    "id": "finance_tech",
+    "name": "Finance, Tech & Hustle Explainer",
+    "description": "High energy, punchy saturated colors, modern cyber aesthetic, fast cuts, whooshes and kinetic typography.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.20:saturation=1.10:brightness=0.02,unsharp=5:5:0.8:5:5:0.0",
+      "tone": "Vibrant Electric Cyan & Deep Navy",
+      "vignette": false
+    },
+    "subtitles": {
+      "fontName": "Montserrat ExtraBold",
+      "fontSize": 74,
+      "primaryColor": "&H00FFFFFF",
+      "highlightColor": "&H00F59E0B",
+      "outlineColor": "&H000F172A",
+      "backColor": "&H90000000",
+      "outline": 4,
+      "shadow": 3,
+      "alignment": 2,
+      "marginV": 130
+    },
+    "pacing": {
+      "avgShotDurationSec": 3.2,
+      "hookShotDurationSec": 2.0,
+      "motion": "kinetic_pop"
+    },
+    "audioProfile": {
+      "musicMood": "modern_synth_bass_pulse",
+      "sfxTypes": ["whoosh_trans", "digital_click", "sub_impact", "coin_drop", "riser_up"],
+      "duckingDb": -17
+    },
+    "searchTags": ["modern skyscraper night", "stock trading neon", "server room", "luxury car dashboard", "tech business"]
+  },
+  "scifi_mystery": {
+    "id": "scifi_mystery",
+    "name": "Sci-Fi & Cosmic Horror",
+    "description": "Deep space ambience, crushed deep blacks, cold cyan split-toning, eerie infrasound drones, and terminal monospace text.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.25:saturation=0.75:brightness=-0.04,colorbalance=rs=-0.05:gs=0.02:bs=0.10,vignette=angle=PI/4.5",
+      "tone": "Deep Space Obsidian & Cyan Split",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "JetBrains Mono",
+      "fontSize": 66,
+      "primaryColor": "&H00E2E8F0",
+      "highlightColor": "&H0022C55E",
+      "outlineColor": "&H00020617",
+      "backColor": "&H80000000",
+      "outline": 4,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 120
+    },
+    "pacing": {
+      "avgShotDurationSec": 5.8,
+      "hookShotDurationSec": 3.0,
+      "motion": "slow_creep_zoom"
+    },
+    "audioProfile": {
+      "musicMood": "ethereal_cosmic_drone",
+      "sfxTypes": ["infrasound_drone", "radio_glitch", "creaking_metal", "void_whisper", "deep_thud"],
+      "duckingDb": -20
+    },
+    "searchTags": ["deep space telescope", "dark laboratory neon", "eerie forest fog", "abandoned research", "radio telescope night"]
+  },
+  "reddit_confession": {
+    "id": "reddit_confession",
+    "name": "Raw Confessions & Reddit POV",
+    "description": "Urban realism, night POV dashcam, handheld feel, fast-paced conversational cadence, dynamic centered captions.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.14:saturation=0.88:brightness=-0.01,vignette=angle=PI/5.5",
+      "tone": "Sodium Vapor Streetlight & Night Urban",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Montserrat ExtraBold",
+      "fontSize": 72,
+      "primaryColor": "&H00FFFFFF",
+      "highlightColor": "&H00EF4444",
+      "outlineColor": "&H00000000",
+      "backColor": "&H80000000",
+      "outline": 4,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 120
+    },
+    "pacing": {
+      "avgShotDurationSec": 3.8,
+      "hookShotDurationSec": 2.2,
+      "motion": "dashcam_pan"
+    },
+    "audioProfile": {
+      "musicMood": "lofi_dark_ambient",
+      "sfxTypes": ["car_windshield_rain", "distant_siren", "tape_rewind", "heartbeat_low", "door_slam"],
+      "duckingDb": -18
+    },
+    "searchTags": ["night city driving pov", "car windshield rain", "empty parking lot night", "subway station empty", "neon diner night"]
+  },
+  "ranks_pov": {
+    "id": "ranks_pov",
+    "name": "@Ranks POV Progression",
+    "description": "Hyper-immersive first-person POV progression stories inspired by @ranksofficiel. Volumetric neon, high-tension HUD, and punchy gamer pacing.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.22:saturation=1.15:brightness=0.01,curves=all='0/0 0.2/0.15 0.8/0.88 1/1'",
+      "tone": "Cyberpunk Neon & Volumetric Shadows",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Montserrat Black",
+      "fontSize": 76,
+      "primaryColor": "&H00FFFFFF",
+      "highlightColor": "&H0000F0FF",
+      "outlineColor": "&H0008090D",
+      "backColor": "&H90000000",
+      "outline": 4,
+      "shadow": 3,
+      "alignment": 2,
+      "marginV": 130
+    },
+    "pacing": {
+      "avgShotDurationSec": 2.8,
+      "hookShotDurationSec": 1.8,
+      "motion": "pov_handheld_shake"
+    },
+    "audioProfile": {
+      "musicMood": "cyber_synthwave_bass_pulse",
+      "sfxTypes": ["hud_level_up", "heartbeat_high", "sub_impact", "whoosh_pass", "digital_ping"],
+      "duckingDb": -16
+    },
+    "voiceProfile": {
+      "voiceId": "POV_OPERATOR_V1",
+      "voiceName": "POV Operator",
+      "tone": "Gritty, Fast, Punchy Adrenaline",
+      "pacing": "fast"
+    },
+    "narratorMode": "pov_hands_hud",
+    "scriptFormula": {
+      "structureName": "5-Tier Gamified Progression",
+      "instructions": "High-stakes POV Hook -> Level 1 Underdog -> Level 2 First Success -> Level 3 The Betrayal -> Level 4 Boss Climax -> Retention Question"
+    },
+    "searchTags": ["pov hands steering wheel", "neon cyberpunk alley", "hud overlay holographic", "first person action", "night drive pov"]
+  },
+  "stickman_animation": {
+    "id": "stickman_animation",
+    "name": "Stickman 2D Animation",
+    "description": "Viral minimalist stick figure narrative inspired by Casually Explained & Kurzgesagt. Expressive characters, chalkboard backgrounds, dry comedic pacing.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.25:saturation=1.2:brightness=0.02",
+      "tone": "Clean Vector Pop & Dark Slate Canvas",
+      "vignette": false
+    },
+    "subtitles": {
+      "fontName": "Fredoka One",
+      "fontSize": 70,
+      "primaryColor": "&H00FFFFFF",
+      "highlightColor": "&H00FFD166",
+      "outlineColor": "&H00141419",
+      "backColor": "&H70000000",
+      "outline": 4,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 120
+    },
+    "pacing": {
+      "avgShotDurationSec": 2.4,
+      "hookShotDurationSec": 1.6,
+      "motion": "comic_snap_cut"
+    },
+    "audioProfile": {
+      "musicMood": "lofi_quirky_beats",
+      "sfxTypes": ["comic_boing", "pencil_scribble", "pop_up", "record_scratch", "funny_whistle"],
+      "duckingDb": -14
+    },
+    "voiceProfile": {
+      "voiceId": "STICKMAN_HERO",
+      "voiceName": "Stickman Hero",
+      "tone": "Casual, Sarcastic, Fast Self-Deprecating",
+      "pacing": "fast"
+    },
+    "narratorMode": "stick_avatar",
+    "scriptFormula": {
+      "structureName": "3-Act Comedic Confession",
+      "instructions": "Absurd Relatable Hook -> Overthinking Spiral -> Escalating Bad Decisions -> Punchline Reality Check"
+    },
+    "searchTags": ["stick figure 2d animation", "chalkboard cartoon drawing", "simple doodle narrative", "minimalist webtoon"]
+  },
+  "visual_documentary": {
+    "id": "visual_documentary",
+    "name": "Deep Script Documentary",
+    "description": "MagnatesMedia & Fern style: every script line maps to archival 2.5D parallax photos, corporate crime dossiers, and top-down desk evidence.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.16:saturation=0.88:brightness=0.01,curves=all='0/0 0.15/0.10 0.6/0.58 1/0.95',vignette=angle=PI/6",
+      "tone": "Warm Tungsten Desk & Archival Noir",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Cinzel",
+      "fontSize": 68,
+      "primaryColor": "&H00EAEAEA",
+      "highlightColor": "&H00D4AF37",
+      "outlineColor": "&H000D0F12",
+      "backColor": "&H80000000",
+      "outline": 3,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 115
+    },
+    "pacing": {
+      "avgShotDurationSec": 4.8,
+      "hookShotDurationSec": 3.0,
+      "motion": "2.5d_parallax_depth"
+    },
+    "audioProfile": {
+      "musicMood": "orchestral_investigation_strings",
+      "sfxTypes": ["clock_tick", "camera_shutter", "paper_rustle", "deep_cello_pulse", "forensic_stamp"],
+      "duckingDb": -20
+    },
+    "voiceProfile": {
+      "voiceId": "DOC_NARRATOR_CALM",
+      "voiceName": "Forensic Chronicler",
+      "tone": "Authoritative, Steady, Investigative Mystery",
+      "pacing": "deliberate"
+    },
+    "narratorMode": "voiceover_only",
+    "scriptFormula": {
+      "structureName": "Forensic Investigative Dossier",
+      "instructions": "The Unsolved Paradox -> Forensic Timeline -> Financial Motive -> The Smoking Gun -> Chilling Conclusion"
+    },
+    "searchTags": ["investigative desk top down", "vintage classified document", "forensic pinboard map", "archival photo sepia"]
+  }
+}

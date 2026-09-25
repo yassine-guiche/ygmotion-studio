@@ -1,0 +1,56 @@
+{
+  "id": "crime_suspense",
+  "name": "True Crime & Police Suspense",
+  "category": "crime_suspense",
+  "tag": "TRUE CRIME",
+  "description": "Dark cinematic 35mm film aesthetic, high-tension narrative, police radio overlays, heavy bass drone music.",
+  "visualPipeline": "realistic_cinematic",
+  "colorPalette": {
+    "primary": "#e63946",
+    "background": "#0b0c10",
+    "accent": "#457b9d",
+    "text": "#f1faee"
+  },
+  "defaultStylePrompt": "Cinematic 35mm photograph, Kodak Vision3 500T, dark atmospheric lighting, cool shadows with warm sodium streetlight amber rim light, high contrast, subtle film grain, photorealistic, 8k, anamorphic lens flare",
+  "speakerMode": "host_and_guest",
+  "hostVoice": {
+    "voiceId": "HOST_MASTER_V1",
+    "voiceName": "Crime Channel Host Anchor (Cold Open)",
+    "tone": "Chilling Noir Investigator"
+  },
+  "narratorMode": "shadow_anchor",
+  "voiceProfile": {
+    "voiceId": "JAKE_EP01_MASTER",
+    "voiceName": "Jake (Gritty Suspense Storyteller)",
+    "tone": "Dark Suspense & Intense Whisper",
+    "pacing": "moderate"
+  },
+  "scriptFormula": {
+    "structureName": "Ticking-Clock Suspense",
+    "instructions": "Cold open with immediate high stakes -> Sensory escalation -> Police/antagonist confrontation -> Climax with moral dilemma"
+  },
+  "audioProfile": {
+    "bgmDuckDb": -18,
+    "sfxLevelDb": -12,
+    "karaokeGlowColor": "#ff4d4d",
+    "fontFamily": "Montserrat Black"
+  },
+  "defaultCharacters": [
+    {
+      "id": "protagonist",
+      "name": "Jake (Protagonist)",
+      "role": "Narrator / Driver",
+      "seed": 904218,
+      "visualDescription": "22-year-old young man, short dark brown faded hair, stressed expressive eyes, grey hoodie over black t-shirt",
+      "portrait_url": null
+    },
+    {
+      "id": "officer_miller",
+      "name": "Officer Miller",
+      "role": "State Trooper",
+      "seed": 883142,
+      "visualDescription": "45-year-old state trooper, hardened stern face, clean-shaven, dark brown trooper campaign hat, dark navy police tactical uniform, high-powered flashlight",
+      "portrait_url": null
+    }
+  ]
+}

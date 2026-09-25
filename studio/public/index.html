@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YGMotion Studio V3 — Multi-Channel AI Video Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="in-launcher-mode">
+  <div class="app-container">
+    
+    <!-- Top Navigation -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <button id="homeLauncherBtn" class="btn btn-secondary btn-icon" title="Channel Project Hub (Option B)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Channels Hub</span>
+        </button>
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <polygon points="5 3 19 12 5 21 5 3" fill="url(#brandGrad)" />
+            <defs>
+              <linearGradient id="brandGrad" x1="5" y1="3" x2="19" y2="21" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#00F0FF" />
+                <stop offset="1" stop-color="#7000FF" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title" id="navChannelName">YGMOTION<span class="gradient-text">.STUDIO</span></span>
+          <span class="brand-badge">V3 MULTI-CHANNEL</span>
+        </div>
+      </div>
+
+      <div class="nav-middle">
+        <div class="nav-project-picker">
+          <span class="picker-label">CHANNEL:</span>
+          <select id="projectSelect" class="episode-dropdown project-accent">
+            <option value="crime_chronicles" selected>🎬 True Crime Chronicles</option>
+          </select>
+        </div>
+
+        <div class="nav-episode-picker editor-only-control">
+          <span class="picker-label">EPISODE:</span>
+          <select id="episodeSelect" class="episode-dropdown">
+            <option value="EP001" selected>EP001 — The Cop Was About to Search My Car</option>
+          </select>
+        </div>
+
+        <div class="nav-style-picker editor-only-control">
+          <span class="picker-label">STYLE:</span>
+          <select id="styleSelect" class="episode-dropdown style-accent">
+            <option value="crime_suspense" selected>🕵️ True Crime & Suspense</option>
+            <option value="ranks_pov">⚡ @Ranks POV Progression</option>
+            <option value="stickman_animation">✏️ Stickman 2D Animation</option>
+            <option value="visual_documentary">📜 Deep Script Documentary</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div class="system-status-pill" id="colabBadge" title="Google Colab CLI Cloud Accelerator">
+          <span class="status-dot pulsing"></span>
+          <span class="status-label">Colab GPU Ready</span>
+        </div>
+        <button id="navResumeStudioBtn" class="btn btn-primary btn-glow launcher-only-control" title="Enter Active Workspace">
+          <span>Enter Studio 🎬</span>
+        </button>
+        <button id="phase1ConsistencyBtn" class="btn btn-primary btn-glow btn-icon editor-only-control" title="Phase 1: Upload Style & Character DNA (VidRush / GoMotion)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+          <span>DNA Hub 🧬</span>
+        </button>
+        <button id="brandProfileBtn" class="btn btn-secondary btn-icon editor-only-control" title="Channel Brand Profile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Brand</span>
+        </button>
+        <button id="openFolderBtn" class="btn btn-secondary btn-icon editor-only-control" title="Open Episode in Explorer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Folder</span>
+        </button>
+        <button id="newEpisodeBtn" class="btn btn-primary btn-glow editor-only-control">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New Episode</span>
+        </button>
+
+        <!-- Ollama Local GPU Telemetry & Eject -->
+        <div class="nav-vram-card" id="ygmotionVramCard" title="Local RTX 4060 GPU Telemetry">
+          <span class="vram-dot" id="ygmotionVramDot"></span>
+          <span class="vram-text" id="ygmotionVramText">GPU Idle</span>
+          <button class="btn-vram-eject" id="ygmotionVramEjectBtn" title="Unload models from VRAM to reduce PC capacity utilization">🛑 Free</button>
+        </div>
+
+        <!-- AI Co-Director Drawer Trigger -->
+        <button id="openAiDirectorBtn" class="btn btn-primary btn-glow btn-icon btn-ai-director" data-trigger="ai-director" title="Open Local AI Co-Director (Qwen 2.5 Coder & DeepSeek R1)">
+          <span style="font-size: 1.1rem;">⚡</span>
+          <span>AI Director 🤖</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Option B: YGMotion Project Launcher / Home Screen -->
+    <div id="projectLauncher" class="project-launcher-view">
+      <!-- Hero Section -->
+      <div class="launcher-hero">
+        <div class="launcher-hero-content">
+          <div class="launcher-title-group">
+            <h1>YGMOTION <span class="gradient-text">STUDIO V3</span></h1>
+            <p>Universal Multi-Channel Video Engine. Choose an existing channel project or spin up a new channel with locked character face DNA, automated audio ducking, and Colab GPU rendering.</p>
+          </div>
+          <div class="launcher-hero-actions">
+            <button id="launcherIngestBtn" class="btn btn-warning btn-glow" style="padding: 12px 24px; font-size: 0.95rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; border: none; box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);">
+              <span>⚡ Ingest YouTube Link (Analyze & Clone Niche)</span>
+            </button>
+            <button id="launcherCreateBtn" class="btn btn-primary" style="padding: 12px 24px; font-size: 0.95rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Create New Channel Project</span>
+            </button>
+            <button id="launcherOpenFolderBtn" class="btn btn-secondary" style="padding: 12px 24px; font-size: 0.95rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Open Channel Folder...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Channels Grid -->
+      <div class="launcher-section">
+        <div class="launcher-section-title">
+          <span>🎬</span>
+          <span>Your Active Channels & Projects</span>
+        </div>
+        <div class="launcher-grid" id="projectsList">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Starter Blueprints / Archetypes Gallery -->
+      <div class="launcher-section">
+        <div class="launcher-section-title">
+          <span>⚡</span>
+          <span>Start a New Channel from Production Blueprint</span>
+        </div>
+        <div class="template-grid" id="templatesList">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Workspace (Editor View) -->
+    <main class="studio-workspace view-hidden" id="studioEditor">
+      
+      <!-- Center: Player & Tabs -->
+      <section class="viewport-section">
+        
+        <!-- Cinema Stage -->
+        <div class="cinema-stage">
+          <div class="stage-header">
+            <div class="episode-meta">
+              <span class="badge episode-tag" id="currentEpTag">EP001</span>
+              <h1 class="episode-title" id="currentEpTitle">The Cop Was About to Search My Car</h1>
+            </div>
+            <div class="quality-badges">
+              <span class="tech-tag" id="activeStyleBadge">🕵️ TRUE CRIME</span>
+              <span class="tech-tag">1080P HD</span>
+              <span class="tech-tag highlight">SYNCHRONIZED KARAOKE</span>
+            </div>
+          </div>
+
+          <!-- Video Player Container -->
+          <div class="video-container" id="videoWrapper">
+            <video id="masterVideo" playsinline preload="metadata">
+              <source id="videoSource" src="" type="video/mp4">
+            </video>
+            
+            <div class="video-overlay" id="videoOverlay">
+              <div class="play-trigger" id="playTrigger">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </div>
+            </div>
+
+            <div class="render-banner" id="renderBanner" style="display: none;">
+              <div class="spinner"></div>
+              <span id="renderBannerText">Rendering Multi-Style 1080p Video... Check console for live progress!</span>
+            </div>
+          </div>
+
+          <!-- Player Controls -->
+          <div class="player-controls">
+            <div class="timeline-bar-wrapper" id="timelineWrapper">
+              <div class="timeline-progress" id="timelineProgress"></div>
+              <div class="timeline-shot-markers" id="shotMarkers"></div>
+            </div>
+            <div class="controls-row">
+              <div class="playback-controls">
+                <button id="playPauseBtn" class="control-btn" title="Play/Pause">
+                  <svg id="playIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <svg id="pauseIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                  </svg>
+                </button>
+                <div class="time-display">
+                  <span id="currentTime">00:00</span>
+                  <span class="time-sep">/</span>
+                  <span id="totalDuration">10:10</span>
+                </div>
+              </div>
+
+              <div class="extra-controls">
+                <button id="subtitlesToggle" class="control-btn active" title="Subtitles Active">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <path d="M7 15h3m4 0h3M7 11h10"></path>
+                  </svg>
+                  <span>CC</span>
+                </button>
+                <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Studio Tabs -->
+        <div class="studio-tabs-container">
+          <div class="tabs-header">
+            <button class="tab-btn active" data-tab="shotsTab">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                <line x1="7" y1="2" x2="7" y2="22"></line>
+                <line x1="17" y1="2" x2="17" y2="22"></line>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+              </svg>
+              <span>52 Story-Synced Clips</span>
+            </button>
+            <button class="tab-btn" data-tab="stylesTab">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="14.31" y1="8" x2="20.05" y2="17.94"></line>
+                <line x1="9.69" y1="8" x2="21.17" y2="8"></line>
+                <line x1="7.38" y1="12" x2="13.12" y2="2.06"></line>
+                <line x1="9.69" y1="16" x2="3.95" y2="6.06"></line>
+                <line x1="14.31" y1="16" x2="2.83" y2="16"></line>
+                <line x1="16.62" y1="12" x2="10.88" y2="21.94"></line>
+              </svg>
+              <span>5 Style Archetypes</span>
+            </button>
+            <button class="tab-btn" data-tab="scriptTab">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>Narration Script</span>
+            </button>
+            <button class="tab-btn" data-tab="stemsTab">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+              <span>Audio Stems & SFX</span>
+            </button>
+            <button class="tab-btn" data-tab="charactersTab">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Character Continuity</span>
+            </button>
+          </div>
+
+          <div class="tabs-body">
+            <!-- Tab 1: Shots -->
+            <div class="tab-content active" id="shotsTab">
+              <div class="shots-grid" id="shotsGrid">
+                <div class="loading-state">Loading shot manifest...</div>
+              </div>
+            </div>
+
+            <!-- Tab 2: Styles -->
+            <div class="tab-content" id="stylesTab">
+              <div class="styles-gallery" id="stylesGallery">
+                <!-- Dynamically populated from /api/styles -->
+              </div>
+            </div>
+
+            <!-- Tab 3: Script -->
+            <div class="tab-content" id="scriptTab">
+              <div class="script-reader" id="scriptContent">
+                <div class="loading-state">Loading script...</div>
+              </div>
+            </div>
+
+            <!-- Tab 4: Stems -->
+            <div class="tab-content" id="stemsTab">
+              <div class="stems-list" id="stemsList">
+                <!-- Dynamically populated from active channel's audioProfile and voiceProfile -->
+              </div>
+            </div>
+
+            <!-- Tab 5: Character Continuity (Calliope & ComfyUI) -->
+            <div class="tab-content" id="charactersTab">
+              <div class="characters-hub">
+                <div class="continuity-header">
+                  <div>
+                    <h3>Persistent Character Archetypes</h3>
+                    <p class="section-subtitle">Consistent facial features, seeds, and ComfyUI role tags across all scenes</p>
+                  </div>
+                  <button id="syncCalliopeBtnTop" class="btn btn-secondary btn-sm">
+                    <span>Sync with Calliope Lab</span>
+                  </button>
+                </div>
+                <div class="characters-grid" id="charactersGrid">
+                  <!-- Dynamically populated from /api/characters -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Sidebar -->
+      <aside class="sidebar-section">
+        
+        <!-- Production Radar -->
+        <div class="card glass-card">
+          <div class="card-header">
+            <h3>Viral Factory Radar</h3>
+            <span class="badge badge-accent">GoMotion Pro</span>
+          </div>
+
+          <div class="pipeline-checklist">
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>1. Script & Pacing</strong>
+                <small>8 parts • 249 lines chunk-timed</small>
+              </div>
+            </div>
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>2. ElevenLabs Speech</strong>
+                <small>Studio Jake narration master</small>
+              </div>
+            </div>
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>3. Atmospheric Sound Design</strong>
+                <small>7 cinematic cue layers</small>
+              </div>
+            </div>
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>4. Synchronized Karaoke</strong>
+                <small>Millisecond word tracking (.ASS)</small>
+              </div>
+            </div>
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>5. 52 Pexels HD Clips</strong>
+                <small>Chunk-duration lockstep</small>
+              </div>
+            </div>
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>6. Unified Cinema Color Grade</strong>
+                <small id="radarGradeText">Cold Teal & Cinema Vignette</small>
+              </div>
+            </div>
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>7. FFmpeg 1080p Render</strong>
+                <small id="renderStatusText">1080p MP4 Ready</small>
+              </div>
+            </div>
+            <div class="checklist-item done">
+              <span class="check-icon">✓</span>
+              <div class="check-details">
+                <strong>8. Google Colab Cloud GPU</strong>
+                <small>Connected & Operational</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calliope AI Studio Bridge -->
+        <div class="card glass-card calliope-card">
+          <div class="card-header">
+            <div class="calliope-brand-title">
+              <span class="calliope-pulse-dot" id="calliopeDot"></span>
+              <h3>Calliope AI Bridge</h3>
+            </div>
+            <span class="badge badge-accent" id="calliopeStatusBadge">CHECKING...</span>
+          </div>
+          <p class="sidebar-tip">Sync your storyline directly to Calliope Lab Canvas & ComfyUI reference workflows.</p>
+          <div class="calliope-meta-box">
+            <div class="calliope-meta-item">
+              <span class="meta-label">ENDPOINT</span>
+              <span class="meta-val" id="calliopeEndpoint">127.0.0.1:8247</span>
+            </div>
+            <div class="calliope-meta-item">
+              <span class="meta-label">ACTIVE LLM</span>
+              <span class="meta-val" id="calliopeLlm">Qwen3.8-27B</span>
+            </div>
+          </div>
+          <div class="calliope-actions">
+            <button id="pushCalliopeBtn" class="btn btn-primary btn-block btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Push to Calliope Canvas</span>
+            </button>
+            <a id="openCalliopeLabBtn" href="http://127.0.0.1:5173/canvas/2" target="_blank" class="btn btn-secondary btn-block btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <span>Open Calliope Lab (5173)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Export & Action Hub -->
+        <div class="card glass-card">
+          <div class="card-header">
+            <h3>Export & Downloads</h3>
+          </div>
+
+          <div class="download-actions">
+            <a id="downloadVideoBtn" class="download-btn primary" href="#" download>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <div class="btn-text">
+                <span class="btn-title">Download Master Video</span>
+                <span class="btn-subtitle" id="videoSizeLabel">1080p MP4 (~485 MB)</span>
+              </div>
+            </a>
+
+            <a id="downloadAudioBtn" class="download-btn" href="/media/EP001/audio/ep001_mixed_master.mp3" download>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+              <div class="btn-text">
+                <span class="btn-title">Mixed Audio Master</span>
+                <span class="btn-subtitle">MP3 (14.6 MB)</span>
+              </div>
+            </a>
+
+            <a id="downloadSubtitlesBtn" class="download-btn" href="/media/EP001/subtitles_karaoke.ass" download>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <div class="btn-text">
+                <span class="btn-title">Synchronized Subtitles</span>
+                <span class="btn-subtitle">ASS & SRT Format</span>
+              </div>
+            </a>
+          </div>
+
+          <button id="triggerRenderBtn" class="btn btn-secondary btn-block">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6"></path>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            <span>Render with Selected Style</span>
+          </button>
+        </div>
+
+      </aside>
+    </main>
+
+  </div>
+
+  <!-- Brand Profile Modal -->
+  <div class="modal-backdrop" id="brandModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Channel Brand Profile</h2>
+        <button class="modal-close" id="closeBrandModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Channel Name</label>
+          <input type="text" id="brandChannelName" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Tag / Category Badge</label>
+          <input type="text" id="brandTag" class="form-input" placeholder="e.g. POV RANKS, STICKMAN 2D, DEEP DOC">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label>Visual Pipeline</label>
+            <select id="brandVisualPipeline" class="form-input">
+              <option value="cyber_pov">⚡ First-Person POV HUD (Cyber)</option>
+              <option value="stickman_2d">✏️ Stickman 2D Animation</option>
+              <option value="archival_documentary">📜 Archival 2.5D Parallax Doc</option>
+              <option value="realistic_cinematic">🎬 Photorealistic 35mm Film</option>
+              <option value="custom">🎨 Custom Creative Pipeline</option>
+            </select>
+          </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label>Speaker Architecture</label>
+            <select id="brandSpeakerMode" class="form-input">
+              <option value="solo_narrator" selected>🎙️ Solo Narrator (Standard YouTube)</option>
+              <option value="host_and_guest">🎙️+🎙️ Host & Guest (Dual-Voice Pilot)</option>
+              <option value="multi_character">🎭 Multi-Character Ensemble</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Narrator Onscreen Mode</label>
+            <select id="brandNarratorMode" class="form-input">
+              <option value="voiceover_only">🎙️ Voiceover Only (Faceless)</option>
+              <option value="stick_avatar">✏️ 2D Stickman Avatar</option>
+              <option value="pov_hands_hud">🕹️ First-Person POV HUD</option>
+              <option value="shadow_anchor">🕵️ Noir Shadow Anchor</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label>Voiceover Persona ID</label>
+            <input type="text" id="brandVoiceId" class="form-input" placeholder="ElevenLabs Voice ID or preset">
+          </div>
+          <div class="form-group">
+            <label>Narration Pacing</label>
+            <select id="brandVoicePacing" class="form-input">
+              <option value="fast">⚡ Fast & Punchy (1.15x)</option>
+              <option value="moderate" selected>🎬 Balanced & Dramatic (1.0x)</option>
+              <option value="deliberate">📜 Deliberate & Forensic (0.9x)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Visual Style Formula Prompt</label>
+          <textarea id="brandStylePrompt" rows="2" class="form-input" placeholder="Enter custom Midjourney / FLUX style formula..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Script Narrative Structure Blueprint</label>
+          <input type="text" id="brandScriptStructure" class="form-input" placeholder="e.g. 5-Tier Level-Up, 3-Act Comedy, Forensic Dossier">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelBrandBtn">Cancel</button>
+        <button class="btn btn-primary btn-glow" id="saveBrandBtn">Save Brand Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Episode Modal -->
+  <div class="modal-backdrop" id="newEpisodeModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Create New Episode (Multi-Style Factory)</h2>
+        <button class="modal-close" id="closeModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Episode ID</label>
+          <input type="text" id="modalEpId" value="EP002" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Episode Title</label>
+          <input type="text" id="modalEpTitle" placeholder="e.g. The Night I Picked Up The Wrong Hitchhiker" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Visual Style Archetype</label>
+          <select id="modalStyle" class="form-input">
+            <option value="crime_suspense">🕵️ True Crime & Suspense</option>
+            <option value="documentary_history">📜 High-End Documentary</option>
+            <option value="finance_tech">📈 Finance & Tech Explainer</option>
+            <option value="scifi_mystery">🌌 Sci-Fi & Cosmic Horror</option>
+            <option value="reddit_confession">🚗 Confessions & Reddit POV</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Full Script</label>
+          <textarea id="modalScript" rows="7" placeholder="Paste your script text here..." class="form-input"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+        <button class="btn btn-primary btn-glow" id="startPipelineBtn">Launch Factory</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Director Shot Studio Modal (Human-In-The-Loop Creator Control) -->
+  <div class="modal-backdrop" id="directorModal" style="display: none;">
+    <div class="modal-card director-modal-card">
+      <div class="modal-header">
+        <div class="director-modal-title">
+          <span class="badge badge-accent">DIRECTOR MODE</span>
+          <h2 id="directorShotTitle">Direct Shot SHOT_01</h2>
+        </div>
+        <button class="modal-close" id="closeDirectorModalBtn">&times;</button>
+      </div>
+      <div class="modal-body director-modal-body">
+        
+        <!-- Left Column: Video & Casting -->
+        <div class="director-col-left">
+          <div class="director-video-preview">
+            <video id="directorVideo" controls playsinline preload="auto"></video>
+            <div class="director-time-tag" id="directorShotTime">0:00 - 0:07 (Duration: 5.82s)</div>
+          </div>
+
+          <div class="form-group">
+            <label>Visual Generation Type</label>
+            <select id="directorVisualType" class="form-input">
+              <option value="stock_broll">📹 Atmospheric Stock B-Roll Video</option>
+              <option value="ai_character">🎭 Consistent AI Character Face (Locked Persona)</option>
+              <option value="custom_file">📁 Custom Uploaded Video / Image</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="directorCharGroup">
+            <label>Cast Character for Face Continuity</label>
+            <select id="directorCharacterSelect" class="form-input">
+              <option value="">None (Environment / Atmosphere)</option>
+              <!-- Dynamically populated from active channel's characters -->
+            </select>
+          </div>
+
+          <!-- Character Face Reference Preview -->
+          <div class="director-face-ref-card" id="directorFaceCard" style="display: none;">
+            <div class="face-ref-thumb-box">
+              <img id="directorFaceThumb" src="" alt="Locked Character Face">
+            </div>
+            <div class="face-ref-info">
+              <div class="face-ref-name" id="directorFaceName">Jake</div>
+              <div class="face-ref-badge" id="directorFaceSeed">Seed: 8392104 • FACE LOCKED</div>
+              <div class="face-ref-traits" id="directorFaceTraits">Messy brown hair, panicked brown eyes...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Prompt & Directive -->
+        <div class="director-col-right">
+          <div class="form-group">
+            <label>Director Visual Prompt (Edit & Refine Before Rendering)</label>
+            <textarea id="directorPrompt" rows="6" class="form-input" placeholder="Cinematic description for this shot..."></textarea>
+            <span class="field-hint">Character facial features & lighting consistency tokens are automatically synchronized.</span>
+          </div>
+
+          <div class="director-calliope-tools">
+            <label>Calliope ComfyUI / Model Turnaround Tools</label>
+            <div class="tool-btn-row">
+              <button type="button" class="btn btn-secondary btn-sm" id="copyCalliopeSheetBtn">
+                <span>Copy Character Turnaround Sheet Prompt</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="copyCalliopePortraitBtn">
+                <span>Copy Face Lock Portrait Prompt</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Audio Narration In This Shot</label>
+            <div class="audio-chunk-preview" id="directorAudioChunk">
+              "The cop was about to search my car..."
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelDirectorBtn">Close</button>
+        <button class="btn btn-primary btn-glow" id="saveDirectorShotBtn">Save Shot Directives</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 1: Consistency Setup Modal (VidRush & GoMotion Engine) -->
+  <div class="modal-backdrop" id="consistencyModal" style="display: none;">
+    <div class="modal-card consistency-modal-card">
+      <div class="modal-header">
+        <div class="consistency-modal-title">
+          <span class="badge badge-accent">PHASE 1 PRE-PRODUCTION</span>
+          <h2>Visual Style & Character DNA Anchors</h2>
+        </div>
+        <button class="modal-close" id="closeConsistencyModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body consistency-modal-body">
+        
+        <!-- Section 1: Master Visual Style Anchor (--sref) -->
+        <div class="consistency-section">
+          <div class="section-title-row">
+            <div class="title-with-badge">
+              <h3>1. Master Visual Style Anchor (--sref)</h3>
+              <span class="badge" id="styleAnchorBadge">STYLE CONFIG</span>
+            </div>
+            <p class="section-desc">Upload or select your reference image. Every shot in the episode will be graded to match this exact lighting, camera lens, and color tone.</p>
+          </div>
+
+          <div class="style-anchor-box">
+            <div class="style-anchor-preview-card" id="stylePreviewCard">
+              <img id="activeStyleImg" src="" alt="Master Style Reference" style="display: none;">
+              <div id="styleEmptyState" class="style-empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 180px; background: rgba(0,0,0,0.4); border: 2px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 20px; text-align: center;">
+                <span style="font-size: 2rem; margin-bottom: 8px;">🎨</span>
+                <span style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">No Style Anchor Uploaded</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Upload your channel's master --sref reference below</span>
+              </div>
+              <div class="style-anchor-overlay" id="styleAnchorOverlay" style="display: none;">
+                <span class="anchor-label">ACTIVE STYLE REFERENCE</span>
+              </div>
+            </div>
+            
+            <div class="style-upload-controls">
+              <label class="btn btn-secondary btn-block upload-label">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Upload Custom Style Image (--sref)</span>
+                <input type="file" id="styleFileInput" accept="image/*" style="display: none;">
+              </label>
+
+              <div class="form-group">
+                <label>Style Formula Prompt</label>
+                <textarea id="styleFormulaText" rows="3" class="form-input" placeholder="Enter style formula prompt or Midjourney --sref tags..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Character Face Reference Anchors (--cref) -->
+        <div class="consistency-section">
+          <div class="section-title-row">
+            <div class="title-with-badge">
+              <h3>2. Character Face Reference Anchors (--cref)</h3>
+              <span class="badge badge-success">4 PERSONAS LOCKED</span>
+            </div>
+            <p class="section-desc">Upload reference photos for each character. When shots feature these personas, the engine guarantees identical facial identity.</p>
+          </div>
+
+          <div class="character-anchors-grid" id="characterAnchorsGrid">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelConsistencyBtn">Close</button>
+        <button class="btn btn-primary btn-glow" id="applyConsistencyBtn">Lock & Apply DNA to All 52 Shots ⚡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Channel Project Wizard Modal -->
+  <div class="modal-overlay" id="newProjectModal">
+    <div class="modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">🚀</span>
+          <h2>Create Channel & Visual Pipeline</h2>
+        </div>
+        <button class="modal-close" id="closeNewProjectModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="section-desc" style="margin-bottom: 18px;">
+          Configure a dedicated storytelling channel. Each channel maintains its own visual art prompt, voiceover persona, narrator onscreen avatar mode, and script narrative formula.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px;">Channel Name</label>
+          <input type="text" id="newProjName" class="form-input" placeholder="e.g. @Ranks Reality Stories, Stickman Chronicles, The Deep Web Archive" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px;">Channel Archetype & Style Blueprint</label>
+          <select id="newProjTemplate" class="form-input" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff;">
+            <option value="ranks_pov">⚡ @Ranks POV Progression Stories (Gamified Level-Up, POV Hands & HUD)</option>
+            <option value="stickman_animation">✏️ Stickman 2D Narrative Animation (Casually Explained / Kurzgesagt Style)</option>
+            <option value="visual_documentary">📜 Deep Script-Specific Documentary (Fern / MagnatesMedia Investigative)</option>
+            <option value="crime_suspense">🕵️ True Crime & Police Suspense (Cinematic 35mm Noir)</option>
+            <option value="custom">🎨 Custom Style Blueprint (Build from Scratch)</option>
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label style="display: block; font-weight: 700; margin-bottom: 6px;">Visual Generation Pipeline</label>
+            <select id="newProjVisualPipeline" class="form-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-size: 0.85rem;">
+              <option value="fal_flux_cinematic">⚡ Fal.ai Flux.1 Dev/Pro (Ultra-Photorealistic)</option>
+              <option value="stable_diffusion_xl">🎨 SDXL 1.0 (2D Art, Vector & Comic)</option>
+              <option value="midjourney_proxy">🎭 Midjourney v6 Proxy (Cinematic Lighting)</option>
+              <option value="local_comfyui">🖥️ Local GPU ComfyUI (Offline Mode)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-weight: 700; margin-bottom: 6px;">Narrator / Onscreen Mode</label>
+            <select id="newProjNarratorMode" class="form-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-size: 0.85rem;">
+              <option value="voiceover_only">🎙️ Voiceover Only (Pure Script B-Roll, No Host)</option>
+              <option value="pov_hands_hud">🧤 POV Hands & HUD (First-Person Immersion)</option>
+              <option value="stick_avatar">✏️ Stick Figure Avatar (Casually Explained)</option>
+              <option value="shadow_anchor">🕵️ Noir Shadow Anchor (Atmospheric Host)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px;">Visual Style Master Formula (Positive Prompt Hook)</label>
+          <textarea id="newProjPrompt" class="form-input" rows="3" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-mono); font-size: 0.8rem;"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px;">Vocal / Speaker Architecture</label>
+          <select id="newProjSpeakerMode" class="form-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-size: 0.85rem;">
+            <option value="solo_narrator" selected>🎙️ Solo Narrator (Standard YouTube Storytelling — 1 Master Voice)</option>
+            <option value="host_and_guest">🎙️+🎙️ Host & Guest (Dual-Voice Format — Pilot Concept)</option>
+            <option value="multi_character">🎭 Multi-Character Ensemble</option>
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label id="newProjVoiceLabel" style="display: block; font-weight: 700; margin-bottom: 6px;">Narrator Voice Persona ID</label>
+            <input type="text" id="newProjVoiceId" class="form-input" value="POV_OPERATOR_V1" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-mono); font-size: 0.85rem;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-weight: 700; margin-bottom: 6px;">Narration Pacing</label>
+            <select id="newProjPacing" class="form-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-size: 0.85rem;">
+              <option value="165">⚡ Fast & Intense (165 WPM - POV & Action)</option>
+              <option value="145" selected>🎙️ Narrative Standard (145 WPM - Drama & Crime)</option>
+              <option value="130">📜 Analytical / Deliberate (130 WPM - Deep Doc)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Optional Host Voice Input (Only active if user explicitly selects Host & Guest format) -->
+        <div class="form-group" id="newProjHostGroup" style="display: none; margin-bottom: 14px; padding: 12px; background: rgba(255, 184, 0, 0.05); border: 1px dashed rgba(255, 184, 0, 0.3); border-radius: var(--radius-sm);">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px; color: var(--accent-amber);">Intro Host Voice ID (Cold Open Anchor)</label>
+          <input type="text" id="newProjHostVoiceId" class="form-input" value="HOST_MASTER_V1" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-mono); font-size: 0.85rem;">
+          <span style="display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Used strictly for introducing the episode before handing over to the main storyteller.</span>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 6px;">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px;">Narrative Script Formula</label>
+          <input type="text" id="newProjScriptFormula" class="form-input" value="5-Tier Gamified Progression" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-size: 0.85rem;">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelNewProjectBtn">Cancel</button>
+        <button class="btn btn-primary btn-glow" id="confirmCreateProjectBtn">Create Channel & Launch Studio 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Open External Channel Folder Modal -->
+  <div class="modal-overlay" id="openFolderModal">
+    <div class="modal-container" style="max-width: 550px;">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">📁</span>
+          <h2>Open Channel Folder</h2>
+        </div>
+        <button class="modal-close" id="closeOpenFolderModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="section-desc" style="margin-bottom: 16px;">
+          Enter the absolute path of any channel folder on your PC. YGMotion will mount it as an active workspace.
+        </p>
+
+        <div class="form-group">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px;">Folder Absolute Path</label>
+          <input type="text" id="externalFolderPath" class="form-input" placeholder="e.g. C:\Users\MSI\Projects\MyChannel" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-mono);">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelOpenFolderModalBtn">Cancel</button>
+        <button class="btn btn-primary btn-glow" id="confirmOpenFolderBtn">Mount & Open Channel 📂</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Channel Project Confirmation Modal -->
+  <div class="modal-overlay" id="deleteProjectModal">
+    <div class="modal-container" style="max-width: 500px; border-color: rgba(239, 68, 68, 0.4);">
+      <div class="modal-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
+        <div class="modal-title-row">
+          <span class="modal-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">🗑️</span>
+          <h2 style="color: #ef4444;">Delete Channel Project</h2>
+        </div>
+        <button class="modal-close" id="closeDeleteProjectModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="deleteProjectId" value="">
+        <p class="section-desc" style="color: #cbd5e1; margin-bottom: 14px; font-size: 0.95rem; line-height: 1.5;">
+          Are you sure you want to permanently delete <strong id="deleteProjectTargetName" style="color: var(--accent-gold);"></strong>?
+        </p>
+        <div style="padding: 12px 14px; background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; border-radius: 4px; margin-bottom: 16px; font-size: 0.85rem; color: #fca5a5;">
+          ⚠️ This will remove the channel configuration, episode scripts, audio stems, and visual footage. This action cannot be undone.
+        </div>
+        <p style="font-size: 0.8rem; color: #94a3b8;">
+          If this is the currently active project, YGMotion will automatically switch to an available channel.
+        </p>
+      </div>
+
+      <div class="modal-footer" style="border-top-color: rgba(255,255,255,0.05);">
+        <button class="btn btn-secondary" id="cancelDeleteProjectBtn">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteProjectBtn" style="background: #ef4444; border-color: #ef4444; color: #fff; font-weight: 700;">Delete Channel 🗑️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 1. CHANNEL INGESTION & NICHE ANALYZER MODAL -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="channelIngestionModal">
+    <div class="modal-container" style="max-width: 850px; max-height: 90vh;">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">⚡</span>
+          <div>
+            <h2>YouTube Channel Ingestion & Niche Analyzer</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Analyze any creator's pacing, hook formula, visual DNA, and generate viral concepts</p>
+          </div>
+        </div>
+        <button class="modal-close" id="closeChannelIngestionModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 140px); padding: 20px;">
+        <!-- Input Bar -->
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 700; margin-bottom: 8px;">Target YouTube Channel or Video URL</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="ytChannelUrlInput" class="form-input" placeholder="e.g. https://www.youtube.com/@ranksofficiel or https://www.youtube.com/watch?v=..." style="flex: 1; padding: 12px; font-size: 0.95rem;">
+            <button class="btn btn-primary btn-glow" id="btnRunChannelAnalyze" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; border: none; white-space: nowrap;">
+              Analyze Niche 🔍
+            </button>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
+            <span style="font-size: 0.75rem; color: #94a3b8;">Quick Presets:</span>
+            <button type="button" class="btn btn-secondary quick-channel-btn" data-url="https://www.youtube.com/@ranksofficiel" style="padding: 4px 10px; font-size: 0.75rem;">@ranksofficiel (POV)</button>
+            <button type="button" class="btn btn-secondary quick-channel-btn" data-url="https://www.youtube.com/@CasuallyExplained" style="padding: 4px 10px; font-size: 0.75rem;">Casually Explained (Stickman)</button>
+            <button type="button" class="btn btn-secondary quick-channel-btn" data-url="https://www.youtube.com/@MagnatesMedia" style="padding: 4px 10px; font-size: 0.75rem;">MagnatesMedia (Doc)</button>
+          </div>
+        </div>
+
+        <!-- Progress Spinner / Steps -->
+        <div id="ingestProgressCard" style="display: none; padding: 25px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); text-align: center; margin-bottom: 20px;">
+          <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 15px auto; border: 3px solid rgba(255,255,255,0.1); border-top-color: #f59e0b; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <h3 id="ingestProgressText" style="font-size: 1.1rem; color: #f59e0b; margin-bottom: 6px;">Scraping channel metadata & videos...</h3>
+          <p id="ingestProgressSubtext" style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Extracting subtitles, word counts, and calculating retention pacing...</p>
+        </div>
+
+        <!-- Analysis Results Dashboard (Revealed after analysis) -->
+        <div id="ingestResultsDashboard" style="display: none;">
+          <!-- Channel Header Banner -->
+          <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); margin-bottom: 20px;">
+            <div id="ingestChannelAvatar" style="width: 64px; height: 64px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; border: 2px solid var(--accent-gold);">
+              📺
+            </div>
+            <div style="flex: 1;">
+              <h3 id="ingestChannelTitle" style="margin: 0 0 4px 0; font-size: 1.25rem;">Channel Title</h3>
+              <p id="ingestChannelStats" style="margin: 0; font-size: 0.85rem; color: #94a3b8;">30 Videos Analyzed • Solo Narrator Standard</p>
+            </div>
+            <div style="text-align: right;">
+              <span id="ingestArchetypeBadge" style="display: inline-block; padding: 6px 14px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 20px; color: #38bdf8; font-size: 0.8rem; font-weight: 700;">
+                POV Progression
+              </span>
+            </div>
+          </div>
+
+          <!-- Niche DNA Insights Cards -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+            <div style="padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+              <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Pacing Standard</div>
+              <div id="ingestPacingVal" style="font-size: 1.3rem; font-weight: 800; color: #f59e0b; margin: 4px 0;">188 WPM</div>
+              <div id="ingestPacingDesc" style="font-size: 0.75rem; color: #cbd5e1;">Fast & Relentless</div>
+            </div>
+            <div style="padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+              <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Motion Archetype</div>
+              <div id="ingestMotionVal" style="font-size: 1.1rem; font-weight: 700; color: #38bdf8; margin: 4px 0;">2.5D Push-In</div>
+              <div id="ingestMotionDesc" style="font-size: 0.75rem; color: #cbd5e1;">Animated Camera Trajectories</div>
+            </div>
+            <div style="padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+              <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Suggested Voice</div>
+              <div id="ingestVoiceVal" style="font-size: 1.1rem; font-weight: 700; color: #34d399; margin: 4px 0;">POV_OPERATOR</div>
+              <div id="ingestVoiceDesc" style="font-size: 0.75rem; color: #cbd5e1;">Direct & High Energy</div>
+            </div>
+          </div>
+
+          <!-- Hook Formula Box -->
+          <div style="padding: 14px; background: rgba(245, 158, 11, 0.06); border-left: 3px solid #f59e0b; border-radius: 4px; margin-bottom: 24px;">
+            <div style="font-size: 0.75rem; color: #f59e0b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Detected Hook & Retention Formula</div>
+            <div id="ingestHookFormula" style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.4;">
+              Level 1: The Initial Awakening. Immediate sensory immersion in second person.
+            </div>
+          </div>
+
+          <!-- Viral Topics Selector -->
+          <h4 style="margin: 0 0 12px 0; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <span>🔥</span> Select Viral Concept to Generate Script:
+          </h4>
+          <div id="ingestViralTopicsList" style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px;">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Custom Topic Input -->
+          <div style="padding: 14px; background: rgba(0,0,0,0.2); border: 1px dashed var(--border-subtle); border-radius: var(--radius-sm);">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Or Enter Custom Episode Topic:</label>
+            <input type="text" id="ingestCustomTopicInput" class="form-input" placeholder="e.g. Your Life as Every Secret Society Rank..." style="width: 100%; padding: 10px; font-size: 0.9rem;">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelChannelIngestionModalBtn">Close</button>
+        <button class="btn btn-primary btn-glow" id="btnLaunchScriptFromIngest" style="display: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; border: none;">
+          Generate Script & Enter Gate 1 (Review) ✍️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. HUMAN-IN-THE-LOOP SCRIPT EDITOR GATE 1  -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="scriptGateModal">
+    <div class="modal-container" style="max-width: 900px; max-height: 90vh;">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">✍️</span>
+          <div>
+            <h2>Stage 1 Gate: AI Script Review & Human Confirmation</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Review and edit line-by-line before locking for voiceover generation</p>
+          </div>
+        </div>
+        <button class="modal-close" id="closeScriptGateModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 140px); padding: 20px;">
+        <!-- Top Stats Banner -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: 18px;">
+          <div>
+            <h3 id="scriptGateTitle" style="margin: 0; font-size: 1.1rem; color: #fff;">Episode Title</h3>
+            <span id="scriptGateMeta" style="font-size: 0.8rem; color: #94a3b8;">8 Scenes • 185 WPM Pacing</span>
+          </div>
+          <div style="display: flex; gap: 14px;">
+            <div style="text-align: right;">
+              <span style="font-size: 0.7rem; color: #94a3b8; display: block;">WORD COUNT</span>
+              <strong id="scriptGateWordCount" style="font-size: 1.1rem; color: #38bdf8;">332</strong>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 0.7rem; color: #94a3b8; display: block;">EST. RUNTIME</span>
+              <strong id="scriptGateRuntime" style="font-size: 1.1rem; color: #34d399;">1m 48s</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Scene Script Cards -->
+        <div id="scriptGateScenesContainer" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn btn-secondary" id="btnRegenerateScript">Regenerate Script 🔄</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" id="cancelScriptGateModalBtn">Cancel</button>
+          <button class="btn btn-primary btn-glow" id="btnConfirmScriptGate" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color: #000; font-weight: 800; border: none;">
+            Lock Script & Proceed to Voice Design (Gate 2) 🎙️
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. VOICE DESIGN STUDIO GATE 2              -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="voiceGateModal">
+    <div class="modal-container" style="max-width: 800px; max-height: 90vh;">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon" style="background: rgba(52, 211, 153, 0.2); color: #34d399;">🎙️</span>
+          <div>
+            <h2>Stage 2 Gate: Voice Design Studio</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Select your narrator voice persona, preview speech audio, and set pacing</p>
+          </div>
+        </div>
+        <button class="modal-close" id="closeVoiceGateModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 140px); padding: 20px;">
+        <!-- Voice Cards Grid -->
+        <label style="display: block; font-weight: 700; margin-bottom: 10px;">Select Narrator Voice Persona:</label>
+        <div id="voiceGateGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Custom ElevenLabs Override -->
+        <div style="padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: 20px;">
+          <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.85rem;">Custom ElevenLabs Voice ID (Optional):</label>
+          <input type="text" id="voiceGateCustomVoiceId" class="form-input" placeholder="Paste ElevenLabs Voice ID..." style="width: 100%; padding: 10px; font-size: 0.9rem;">
+        </div>
+
+        <!-- Pacing & Karaoke Style -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px;">
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.85rem;">Narration Speed Multiplier</label>
+            <select id="voiceGateSpeedSelect" class="form-select" style="width: 100%; padding: 10px;">
+              <option value="1.15">1.15x (Fast / POV Retention Tier)</option>
+              <option value="1.0" selected>1.0x (Standard YouTube Storytelling)</option>
+              <option value="0.9">0.9x (Deliberate / Deep Documentary)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.85rem;">Karaoke Subtitle Style</label>
+            <select id="voiceGateKaraokeStyle" class="form-select" style="width: 100%; padding: 10px;">
+              <option value="gold_pop" selected>Golden Word Pop (Montserrat Black)</option>
+              <option value="cyber_cyan">Cyber Cyan Neon Glow</option>
+              <option value="clean_white">Minimalist Clean White</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn btn-secondary" id="btnPreviewVoiceSample">Play Voice Sample 🔊</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" id="cancelVoiceGateModalBtn">Back to Script</button>
+          <button class="btn btn-primary btn-glow" id="btnConfirmVoiceGate" style="background: linear-gradient(135deg, #34d399, #059669); color: #000; font-weight: 800; border: none;">
+            Synthesize Voice & Generate Timestamps (Gate 3) 🎬
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. SCENE & MOTION DIRECTOR GATE 3         -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="sceneDirectorModal">
+    <div class="modal-container" style="max-width: 950px; max-height: 90vh;">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon" style="background: rgba(168, 85, 247, 0.2); color: #a855f7;">🎬</span>
+          <div>
+            <h2>Stage 3 Gate: Scene Visuals & Image-to-Video Motion Engine</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Review generated visuals and animate static image scenes with cinematic camera trajectories</p>
+          </div>
+        </div>
+        <button class="modal-close" id="closeSceneDirectorModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 140px); padding: 20px;">
+        <div style="padding: 12px 16px; background: rgba(168, 85, 247, 0.1); border-left: 3px solid #a855f7; border-radius: 4px; margin-bottom: 20px; font-size: 0.85rem; color: #e9d5ff;">
+          🎥 <strong>Image-to-Video Engine Active:</strong> Static images are automatically animated into 1080p video clips with 6 hardware-accelerated camera motion profiles (Push-In, Zoom-Out, Pan, Tilt, 2.5D Float, Shake).
+        </div>
+
+        <div id="sceneDirectorGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px;">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn btn-secondary" id="btnBatchAnimateAll">Animate All Image Scenes ⚡</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" id="cancelSceneDirectorModalBtn">Close</button>
+          <button class="btn btn-primary btn-glow" id="btnConfirmSceneDirector" style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; font-weight: 800; border: none;">
+            Lock All Scenes & Assemble Master Video 🚀
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- YGMOTION AI CO-DIRECTOR DRAWER (Ollama Qwen & DeepSeek)   -->
+  <!-- ======================================================== -->
+  <div class="drawer-backdrop" id="aiDirectorBackdrop"></div>
+  <aside class="ai-director-drawer" id="aiDirectorDrawer">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <div class="drawer-brand-icon">⚡</div>
+        <div>
+          <div class="drawer-title">AI Co-Director</div>
+          <div class="drawer-subtitle" id="drawerSubTitle">RTX 4060 GPU (Ollama Local)</div>
+        </div>
+      </div>
+
+      <div class="drawer-model-toggle">
+        <button class="d-model-btn active-qwen" id="drawerTabQwen" data-model="qwen2.5-coder:7b">💻 Qwen 2.5</button>
+        <button class="d-model-btn" id="drawerTabDeepseek" data-model="deepseek-r1:8b">🧠 DeepSeek R1</button>
+      </div>
+
+      <button class="btn-drawer-close" id="closeAiDirectorBtn" title="Close AI Director Drawer">✕</button>
+    </div>
+
+    <!-- Studio Quick Actions -->
+    <div class="drawer-quick-actions">
+      <button class="btn-quick-act" id="actGenerateHook" title="Brainstorm escalation hooks & psychological plot with DeepSeek R1">
+        <span>🎬</span> Hook & Plot
+      </button>
+      <button class="btn-quick-act" id="actGenerateShots" title="Generate prompt manifest shots from script with Qwen 2.5">
+        <span>🎨</span> Shots Manifest
+      </button>
+      <button class="btn-quick-act" id="actRefineScene" title="Polish and punch up active script dialogue">
+        <span>✍️</span> Polish Script
+      </button>
+    </div>
+
+    <!-- Drawer Messages Box -->
+    <div class="drawer-messages" id="drawerMessages">
+      <div class="drawer-empty-state" id="drawerEmptyState">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚡</div>
+        <h4>Local AI Co-Director Ready</h4>
+        <p>Generate viral hooks with <strong>DeepSeek R1</strong> or structured prompt manifests with <strong>Qwen 2.5 Coder</strong> running directly on your GPU.</p>
+      </div>
+    </div>
+
+    <!-- Drawer Input Dock -->
+    <div class="drawer-input-dock">
+      <div class="drawer-input-box">
+        <textarea id="drawerInput" placeholder="Ask AI Director to generate hooks, visual prompts, or review script..." rows="1"></textarea>
+        <button id="drawerSendBtn" class="btn-drawer-send" title="Send to model">➤</button>
+      </div>
+      <div class="drawer-footer-meta">
+        <span id="drawerActiveModelLabel">Model: Qwen 2.5 Coder (7B)</span>
+        <button id="drawerClearBtn" class="btn-drawer-clear" title="Clear conversation">Clear</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>

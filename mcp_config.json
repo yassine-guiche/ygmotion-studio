@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "elevenlabs": {
+      "command": "node",
+      "args": ["engine/mcp/elevenlabs/server.js"],
+      "env": {
+        "ELEVENLABS_API_KEY": "${ELEVENLABS_API_KEY}"
+      }
+    },
+    "capcut": {
+      "command": "node",
+      "args": ["engine/mcp/capcut/server.js"]
+    }
+  }
+}

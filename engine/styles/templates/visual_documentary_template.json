@@ -1,0 +1,48 @@
+{
+  "id": "visual_documentary",
+  "name": "Deep Script-Specific Visual Documentary",
+  "category": "visual_documentary",
+  "tag": "DEEP DOC",
+  "description": "Inspired by MagnatesMedia, Fern, and James Jani. Every sentence in the script generates a bespoke visual: archival 2.5D parallax photos, corporate crime diagrams, 3D newspaper cutouts, and dark investigative collages.",
+  "visualPipeline": "archival_documentary",
+  "colorPalette": {
+    "primary": "#d4af37",
+    "background": "#0d0f12",
+    "accent": "#00b4d8",
+    "text": "#eaeaea"
+  },
+  "defaultStylePrompt": "High-end investigative documentary visual, dark atmospheric archival photo treatment, subtle 2.5D parallax depth map, vintage halftone grain, cinematic top-down warm tungsten desk lamp, high contrast chiaroscuro, 8k resolution, Masterpiece",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "voiceover_only",
+  "voiceProfile": {
+    "voiceId": "DOC_NARRATOR_CALM",
+    "voiceName": "Forensic Chronicler (Deep Investigative Voice)",
+    "tone": "Authoritative, Steady, Investigative Mystery",
+    "pacing": "deliberate"
+  },
+  "scriptFormula": {
+    "structureName": "Forensic Investigative Dossier",
+    "instructions": "The Unsolved Paradox -> Forensic Timeline -> Financial Motive -> The Smoking Gun -> Chilling Conclusion"
+  },
+  "audioProfile": {
+    "bgmDuckDb": -20,
+    "sfxLevelDb": -14,
+    "karaokeGlowColor": "#d4af37",
+    "fontFamily": "Cinzel / Playfair Display / Montserrat"
+  },
+  "scriptToVisualEngine": {
+    "mode": "one_to_one_sentence",
+    "enableParallax": true,
+    "visualArchetypes": ["archival_photo", "newspaper_clipping", "forensic_map", "3d_isometric_scene", "macro_evidence"]
+  },
+  "defaultCharacters": [
+    {
+      "id": "subject_profile",
+      "name": "Investigation Target",
+      "role": "Documentary Subject",
+      "seed": 654321,
+      "visualDescription": "Black and white classified FBI file photo with red marker annotations, forensic stamp, paper clip",
+      "portrait_url": null
+    }
+  ]
+}

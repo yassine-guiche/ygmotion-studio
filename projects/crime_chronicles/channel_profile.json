@@ -1,0 +1,52 @@
+{
+  "id": "crime_chronicles",
+  "name": "True Crime Chronicles",
+  "category": "crime_suspense",
+  "tag": "TRUE CRIME",
+  "description": "Dark cinematic 35mm film aesthetic, high-tension narrative, police radio overlays, heavy bass drone music.",
+  "visualPipeline": "realistic_cinematic",
+  "colorPalette": {
+    "primary": "#e63946",
+    "background": "#0b0c10",
+    "accent": "#457b9d",
+    "text": "#f1faee"
+  },
+  "defaultStylePrompt": "Cinematic 35mm photograph, Kodak Vision3 500T, dark atmospheric lighting, cool shadows with warm sodium streetlight amber rim light, high contrast, subtle film grain, photorealistic, 8k, anamorphic lens flare",
+  "speakerMode": "host_and_guest",
+  "narratorMode": "shadow_anchor",
+  "hostVoice": {
+    "voiceId": "HOST_MASTER_V1",
+    "voiceName": "Noir Host Anchor (Cold Open)"
+  },
+  "voiceProfile": {
+    "voiceId": "JAKE_EP01_MASTER",
+    "voiceName": "Jake (Guest Storyteller)",
+    "pacing": "moderate",
+    "tone": "Gritty Suspense"
+  },
+  "audioProfile": {
+    "bgmDuckDb": -18,
+    "sfxLevelDb": -12,
+    "karaokeGlowColor": "#ff4d4d",
+    "fontFamily": "Montserrat Black"
+  },
+  "createdAt": "2026-09-11T00:41:41.260Z",
+  "defaultCharacters": [
+    {
+      "id": "protagonist",
+      "name": "Jake (Protagonist)",
+      "role": "Narrator / Driver",
+      "seed": 904218,
+      "visualDescription": "22-year-old young man, short dark brown faded hair, stressed expressive eyes, grey hoodie over black t-shirt",
+      "portrait_url": "/channel_assets/characters/jake/jake_dna_sheet_1x1.jpg"
+    },
+    {
+      "id": "officer_miller",
+      "name": "Officer Miller",
+      "role": "State Trooper",
+      "seed": 883142,
+      "visualDescription": "45-year-old state trooper, hardened stern face, clean-shaven, dark brown trooper campaign hat, dark navy police tactical uniform, high-powered flashlight",
+      "portrait_url": "/channel_assets/characters/officer/officer_dna_sheet_1x1.jpg"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "channelName": "Chronicles of the Unknown",
+  "tagline": "Real Stories. High-Stakes Thrills.",
+  "activeStyle": "crime_suspense",
+  "defaultVoice": "JAKE_EP01_MASTER",
+  "exportResolution": "1080p",
+  "fps": 30,
+  "enableKaraoke": true,
+  "enableCinemaGrade": true,
+  "enableSoundDesign": true,
+  "updatedAt": "2026-09-10T23:45:00.000Z"
+}

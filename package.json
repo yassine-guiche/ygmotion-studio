@@ -1,0 +1,22 @@
+{
+  "name": "ygmotion-studio",
+  "version": "3.0.0",
+  "description": "YGMotion Studio V3 - Multi-Channel AI Storytelling & Video Automation Engine",
+  "main": "studio/server.js",
+  "scripts": {
+    "start": "node studio/server.js",
+    "dev": "node studio/server.js"
+  },
+  "keywords": [
+    "youtube-automation",
+    "ai-storytelling",
+    "video-generator",
+    "faceless-channel",
+    "motion-engine",
+    "ffmpeg",
+    "elevenlabs",
+    "capcut"
+  ],
+  "author": "Yassine Guiche",
+  "license": "MIT"
+}

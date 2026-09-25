@@ -1,0 +1,31 @@
+{
+  "id": "deep_investigative_dossier",
+  "name": "Deep Investigative Dossier",
+  "category": "visual_documentary",
+  "tag": "DEEP DOC",
+  "description": "Inspired by MagnatesMedia, Fern, and James Jani. Every sentence in the script generates a bespoke visual: archival 2.5D parallax photos, corporate crime diagrams, 3D newspaper cutouts, and dark investigative collages.",
+  "visualPipeline": "archival_documentary",
+  "colorPalette": {
+    "primary": "#d4af37",
+    "background": "#0d0f12",
+    "accent": "#00b4d8",
+    "text": "#eaeaea"
+  },
+  "defaultStylePrompt": "High-end investigative documentary visual, dark atmospheric archival photo treatment, subtle 2.5D parallax depth map, 8k resolution",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "voiceover_only",
+  "voiceProfile": {
+    "voiceId": "DOC_NARRATOR_CALM",
+    "voiceName": "Forensic Solo Narrator",
+    "pacing": "deliberate",
+    "tone": "Authoritative & Investigative"
+  },
+  "scriptFormula": "Forensic Investigative Dossier",
+  "audioProfile": {
+    "bgmDuckDb": -20,
+    "sfxLevelDb": -14,
+    "karaokeGlowColor": "#d4af37",
+    "fontFamily": "Cinzel / Playfair Display / Montserrat"
+  },
+  "createdAt": "2026-09-11T00:48:28.728Z"
+}

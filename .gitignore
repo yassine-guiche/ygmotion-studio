@@ -1,0 +1,45 @@
+# Environment and secrets (CRITICAL: Never commit API keys!)
+.env
+*.env.local
+
+# Dependency directories
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Heavy media & generated video renders (Protects GitHub quota)
+episodes/
+projects/*/episodes/
+scratch/
+*.mp4
+*.m4v
+*.mov
+*.avi
+*.mkv
+*.webm
+*.mp3
+*.wav
+*.aac
+*.flac
+
+# Logs & temp files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor caches
+.vscode/
+.idea/
+*.swp
+*.swo

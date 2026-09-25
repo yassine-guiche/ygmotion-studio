@@ -1,0 +1,2 @@
+# Python dependencies for YGMotion YouTube Scraper & Transcript Analysis
+youtube-transcript-api>=0.6.2
