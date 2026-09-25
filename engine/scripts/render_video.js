@@ -111,14 +111,13 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   console.log(`    Engine:  FFmpeg (${encoder.name} hardware acceleration)`);
   console.log("=======================================================\n");
 
-  // 1. Locate Audio Master
+  // 1. Locate Audio Master in this episode's directory
   const audioCandidates = [
     path.join(audioDir, `${episodeId.toLowerCase()}_mixed_master.mp3`),
     path.join(audioDir, "ep001_mixed_master.mp3"),
     path.join(audioDir, "ep001_full_speech_track.mp3"),
     path.join(epDir, "audio_master.mp3"),
-    path.join(epDir, "master_voiceover.mp3"),
-    path.join(ROOT_DIR, "projects", "crime_chronicles", "episodes", "EP001", "audio", "ep001_mixed_master.mp3")
+    path.join(epDir, "master_voiceover.mp3")
   ];
 
   let audioFile = null;
@@ -132,6 +131,19 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   if (!audioFile && fs.existsSync(audioDir)) {
     const mp3s = fs.readdirSync(audioDir).filter(f => f.endsWith(".mp3") || f.endsWith(".wav"));
     if (mp3s.length > 0) audioFile = path.join(audioDir, mp3s[0]);
+  }
+
+  // Cross-project fallback only if nothing in this episode
+  if (!audioFile) {
+    const fallbackCandidates = [
+      path.join(ROOT_DIR, "projects", "crime_chronicles", "episodes", "EP001", "audio", "ep001_mixed_master.mp3")
+    ];
+    for (const c of fallbackCandidates) {
+      if (fs.existsSync(c)) {
+        audioFile = c;
+        break;
+      }
+    }
   }
 
   if (!audioFile) {
@@ -149,9 +161,16 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
 
   const characterContinuity = require("../styles/character_continuity");
 
+  const masterStyleImg = [
+    path.join(projDir, "channel_assets", "style", "master_style_reference_16x9.jpg"),
+    path.join(epDir, "channel_assets", "style", "master_style_reference_16x9.jpg"),
+    path.join(ROOT_DIR, "channel_assets", "style", "master_style_reference_16x9.jpg"),
+    path.join(ROOT_DIR, "projects", "crime_chronicles", "channel_assets", "style", "master_style_reference_16x9.jpg")
+  ].find(f => fs.existsSync(f));
+
   const chunkGroups = {};
   for (const s of manifest.shots || []) {
-    let p = path.join(epDir, s.file);
+    let p = s.file ? path.join(epDir, s.file) : null;
 
     // Director Override: If creator selected a character face or custom file
     if (s.visualType === "ai_character" && s.characterId) {
@@ -167,7 +186,12 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
       p = s.customFile;
     }
 
-    if (fs.existsSync(p)) {
+    // Fallback to master style reference image if shot file is pending
+    if ((!p || !fs.existsSync(p)) && masterStyleImg) {
+      p = masterStyleImg;
+    }
+
+    if (p && fs.existsSync(p)) {
       const cId = s.audio || "default";
       if (!chunkGroups[cId]) chunkGroups[cId] = [];
       const ext = path.extname(p).toLowerCase();
@@ -256,7 +280,7 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   console.log(`\n[4/5] Normalizing & color grading clips with [${selectedStyle.name}]...`);
   const normalizedClips = [];
 
-  const BATCH_SIZE = 4;
+  const BATCH_SIZE = 2;
   for (let i = 0; i < plannedShots.length; i += BATCH_SIZE) {
     const batch = plannedShots.slice(i, i + BATCH_SIZE);
     const promises = batch.map((shot, idx) => {
@@ -269,15 +293,15 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
       let args = [];
 
       if (shot.isImage) {
-        // Subtle 2.5D Ken Burns zoom for still character portraits
-        vf = `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,zoompan=z='min(zoom+0.0012,1.15)':d=125:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1920x1080,fps=30,${colorGradeFilter}`;
+        // High-speed 2.5D Ken Burns zoom for still character portraits
+        const totalFrames = Math.max(30, Math.round(shot.targetDurationSec * 30));
+        vf = `zoompan=z='min(zoom+0.0012,1.15)':d=${totalFrames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1920x1080:fps=30,${colorGradeFilter}`;
         args = [
           "-y",
-          "-loop", "1",
-          "-t", shot.targetDurationSec.toFixed(3),
           "-i", inputPath,
           "-vf", vf,
           ...encoder.args,
+          "-t", shot.targetDurationSec.toFixed(3),
           "-an",
           outClip
         ];
@@ -373,7 +397,8 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
 if (require.main === module) {
   const episodeArg = process.argv[2] || "EP001";
   const styleArg = process.argv[3] || "crime_suspense";
-  renderEpisode(episodeArg, styleArg).catch(err => {
+  const projectDirArg = process.argv[4] || null;
+  renderEpisode(episodeArg, styleArg, projectDirArg).catch(err => {
     console.error("\n❌ RENDER ERROR:", err.message);
     process.exit(1);
   });

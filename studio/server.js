@@ -209,6 +209,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === "/api/ai/ollama/start" && req.method === "POST") {
+    try {
+      const ollamaBin = "C:\\Users\\MSI\\AppData\\Local\\Programs\\Ollama\\ollama.exe";
+      const proc = spawn(ollamaBin, ["serve"], { detached: true, stdio: "ignore" });
+      proc.unref();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ success: true, message: "Ollama service started" }));
+    } catch (e) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
   if (pathname === "/api/ai/ollama/unload" && req.method === "POST") {
     const psReq = http.request(new URL("/api/ps", OLLAMA_HOST), (psRes) => {
       let data = "";
@@ -547,7 +560,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // API: Episode Detail
-  if (pathname.startsWith("/api/episode/") && req.method === "GET") {
+  if (pathname.startsWith("/api/episode/") && !pathname.endsWith("/files") && req.method === "GET") {
     const epId = pathname.slice("/api/episode/".length);
     const epDir = path.join(paths.episodesDir, epId);
     if (!fs.existsSync(epDir)) {
@@ -567,11 +580,82 @@ const server = http.createServer(async (req, res) => {
     if (fs.existsSync(manifestPath)) {
       try {
         const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-        shots = (manifest.shots || []).map(s => ({
-          ...s,
-          mediaUrl: `/media/${epId}/${s.file || 'placeholder.mp4'}`
-        }));
-      } catch {}
+        const rawShots = manifest.shots || [];
+        let runningTime = 0;
+
+        shots = rawShots.map((s, idx) => {
+          const duration = parseFloat(s.duration || 14.2);
+          const startTime = s.startTime !== undefined ? s.startTime : runningTime;
+          runningTime += duration;
+          const endTime = s.endTime !== undefined ? s.endTime : runningTime;
+
+          let videoUrl = null;
+          let thumbnailUrl = null;
+
+          // 1. Direct file check on disk
+          if (s.file) {
+            const shotPath = path.join(epDir, s.file);
+            if (fs.existsSync(shotPath)) {
+              const ext = path.extname(s.file).toLowerCase();
+              if ([".mp4", ".mov", ".webm"].includes(ext)) {
+                videoUrl = `/media/${epId}/${s.file}`;
+              } else {
+                thumbnailUrl = `/media/${epId}/${s.file}`;
+              }
+            }
+          }
+
+          // 2. Footage clip search in assets/footage
+          if (!videoUrl) {
+            const paddedIdx = String(idx + 1).padStart(2, "0");
+            const footageCandidates = [
+              path.join(epDir, "assets", "footage", `SHOT_${paddedIdx}.mp4`),
+              path.join(epDir, "assets", "footage", `shot_${paddedIdx}.mp4`),
+              path.join(ROOT_DIR, "projects", "crime_chronicles", "episodes", "EP001", "assets", "footage", `SHOT_${paddedIdx}.mp4`)
+            ];
+            for (const fc of footageCandidates) {
+              if (fs.existsSync(fc)) {
+                if (fc.startsWith(epDir)) {
+                  videoUrl = `/media/${epId}/assets/footage/${path.basename(fc)}`;
+                } else {
+                  videoUrl = `/media-project/crime_chronicles/episodes/EP001/assets/footage/${path.basename(fc)}`;
+                }
+                break;
+              }
+            }
+          }
+
+          // 3. Character portrait if character-bound
+          if (!thumbnailUrl && s.characterId) {
+            const charFile = path.join(paths.assetsDir, "characters", s.characterId, "portrait.jpg");
+            if (fs.existsSync(charFile)) {
+              thumbnailUrl = `/channel_assets/characters/${s.characterId}/portrait.jpg`;
+            }
+          }
+
+          // 4. Fallback to style reference image
+          if (!thumbnailUrl) {
+            thumbnailUrl = `/channel_assets/style/master_style_reference_16x9.jpg`;
+          }
+
+          const motionTypes = ["🎥 Slow Push In", "⚡ 2.5D Ken Burns", "✨ Pan Right", "🎬 Dutch Angle", "🔍 Macro Detail", "🚁 Drone Overhead"];
+          const motion = s.motion || motionTypes[idx % motionTypes.length];
+
+          return {
+            ...s,
+            startTime,
+            endTime,
+            duration,
+            motion,
+            visualPrompt: s.visualPrompt || s.text || `Shot ${idx + 1} narrative visual frame`,
+            thumbnailUrl,
+            videoUrl: videoUrl || (summary && summary.finalVideo ? summary.finalVideo.path : null),
+            mediaUrl: videoUrl || thumbnailUrl
+          };
+        });
+      } catch (err) {
+        console.error("Error reading manifest:", err);
+      }
     }
 
     let subtitles = "";
@@ -592,6 +676,62 @@ const server = http.createServer(async (req, res) => {
       shots,
       subtitles,
       karaokeData
+    }));
+  }
+
+  // API: Get Episode Directory Files (In-Tab Explorer)
+  if (pathname.startsWith("/api/episode/") && pathname.endsWith("/files") && req.method === "GET") {
+    const parts = pathname.split("/");
+    const epId = parts[3];
+    const epDir = path.join(paths.episodesDir, epId);
+    if (!fs.existsSync(epDir)) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ error: "Episode directory not found" }));
+    }
+
+    function scanDir(dir, prefix = "") {
+      const items = [];
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.name.startsWith(".") || entry.name === "_tmp_render" || entry.name === "node_modules") continue;
+          const full = path.join(dir, entry.name);
+          const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+          if (entry.isDirectory()) {
+            items.push({
+              name: entry.name,
+              relPath: rel,
+              isDir: true,
+              children: scanDir(full, rel)
+            });
+          } else {
+            const st = fs.statSync(full);
+            const ext = path.extname(entry.name).toLowerCase();
+            const sizeMb = (st.size / (1024 * 1024)).toFixed(2);
+            const sizeKb = (st.size / 1024).toFixed(1);
+            const sizeFormatted = st.size > 1024 * 1024 ? `${sizeMb} MB` : `${sizeKb} KB`;
+            items.push({
+              name: entry.name,
+              relPath: rel,
+              mediaUrl: `/media/${epId}/${rel}`,
+              isDir: false,
+              ext,
+              sizeBytes: st.size,
+              sizeFormatted,
+              modified: st.mtime
+            });
+          }
+        }
+      } catch (e) {}
+      return items;
+    }
+
+    const fileTree = scanDir(epDir);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({
+      folderPath: epDir,
+      episodeId: epId,
+      files: fileTree
     }));
   }
 
@@ -653,7 +793,7 @@ const server = http.createServer(async (req, res) => {
         const targetId = episodeId || "EP001";
         const targetStyle = styleId || paths.active.category || "crime_suspense";
         
-        const renderProc = spawn("node", ["engine/scripts/render_video.js", targetId, targetStyle], {
+        const renderProc = spawn("node", ["engine/scripts/render_video.js", targetId, targetStyle, paths.projectDir], {
           cwd: ROOT_DIR,
           detached: true,
           stdio: "ignore"

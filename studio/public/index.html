@@ -263,6 +263,108 @@
                 </button>
               </div>
             </div>
+        </div>
+
+        <!-- CapCut-Style Multi-Track Visual Timeline Editor -->
+        <div class="capcut-timeline-editor" id="capcutTimelineEditor">
+          <!-- Timeline Control Bar -->
+          <div class="capcut-timeline-toolbar">
+            <div class="toolbar-left">
+              <span class="toolbar-pill"><span class="pulse-dot"></span> CAPCUT VISUAL TIMELINE</span>
+              <div class="timecode-box">
+                <span id="ccCurrentTimecode">00:00:00</span>
+                <span class="tc-sep">/</span>
+                <span id="ccTotalTimecode">00:01:53</span>
+              </div>
+            </div>
+            <div class="toolbar-center">
+              <span class="active-clip-pill" id="ccActiveClipPill">Active: Shot 1</span>
+            </div>
+            <div class="toolbar-tools">
+              <button class="cc-tool-btn" id="ccSplitBtn" title="Split Clip at Playhead (✂️)">✂️ Split</button>
+              <button class="cc-tool-btn" id="ccExportCapcutBtn" title="Export CapCut Project Draft (⚡)">🎬 Open in CapCut</button>
+              <div class="zoom-controls">
+                <button class="cc-zoom-btn" id="ccZoomOut" title="Zoom Out Timeline">−</button>
+                <span id="ccZoomLevel">100%</span>
+                <button class="cc-zoom-btn" id="ccZoomIn" title="Zoom In Timeline">+</button>
+                <button class="cc-zoom-btn" id="ccZoomFit" title="Fit Timeline to Screen">Fit</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-Track Ruler & Canvas -->
+          <div class="capcut-timeline-viewport" id="ccTimelineViewport">
+            <!-- Global Scrubbable Playhead Needle -->
+            <div class="capcut-playhead" id="ccPlayhead">
+              <div class="playhead-head">▼</div>
+              <div class="playhead-line"></div>
+            </div>
+
+            <!-- Timecode Ruler -->
+            <div class="capcut-ruler" id="ccRuler">
+              <!-- Dynamically populated second ticks (00:00, 00:05, 00:10...) -->
+            </div>
+
+            <!-- Tracks Container -->
+            <div class="capcut-tracks" id="ccTracksContainer">
+              <!-- Track V1: Video / Visual Shots -->
+              <div class="capcut-track track-visuals">
+                <div class="track-header">
+                  <span class="track-icon">🎥</span>
+                  <div class="track-title-col">
+                    <span class="track-title">V1 Visuals</span>
+                    <span class="track-sub" id="ccVisualsCount">8 clips</span>
+                  </div>
+                </div>
+                <div class="track-lane" id="ccVisualsLane">
+                  <!-- Dynamically populated shot thumbnail blocks -->
+                </div>
+              </div>
+
+              <!-- Track V2: Captions / Subtitles -->
+              <div class="capcut-track track-captions">
+                <div class="track-header">
+                  <span class="track-icon">💬</span>
+                  <div class="track-title-col">
+                    <span class="track-title">V2 Captions</span>
+                    <span class="track-sub">Karaoke Sync</span>
+                  </div>
+                </div>
+                <div class="track-lane" id="ccCaptionsLane">
+                  <!-- Dynamically populated synced subtitle blocks -->
+                </div>
+              </div>
+
+              <!-- Track A1: Voiceover Track -->
+              <div class="capcut-track track-audio">
+                <div class="track-header">
+                  <span class="track-icon">🎙️</span>
+                  <div class="track-title-col">
+                    <span class="track-title">A1 Voiceover</span>
+                    <span class="track-sub" id="ccVoiceBadge">Master VO</span>
+                  </div>
+                </div>
+                <div class="track-lane" id="ccVoiceLane">
+                  <!-- Audio waveform chunks with speech activity -->
+                </div>
+              </div>
+
+              <!-- Track A2: Music & SFX Track -->
+              <div class="capcut-track track-music">
+                <div class="track-header">
+                  <span class="track-icon">🎵</span>
+                  <div class="track-title-col">
+                    <span class="track-title">A2 Music & SFX</span>
+                    <span class="track-sub">Ducked -18dB</span>
+                  </div>
+                </div>
+                <div class="track-lane" id="ccMusicLane">
+                  <div class="music-wave-bar">
+                    <span class="music-label">🎶 Master Ambient Suspense Bus • YouTube -14 LUFS Locked</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

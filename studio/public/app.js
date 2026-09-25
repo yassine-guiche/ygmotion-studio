@@ -268,20 +268,27 @@ function renderShots(shots) {
   shotsGrid.innerHTML = "";
   if (shotMarkers) shotMarkers.innerHTML = "";
 
-  if (shots.length === 0) {
-    shotsGrid.innerHTML = '<div class="loading-state">No stock footage clips found.</div>';
+  if (!shots || shots.length === 0) {
+    shotsGrid.innerHTML = '<div class="loading-state">No shot sequences found. Click "Generate Visuals" to synthesize clips.</div>';
+    renderCapCutTimeline([]);
     return;
   }
 
-  const durPerShot = totalDurationSec / shots.length;
+  const effectiveDuration = masterVideo && masterVideo.duration && !isNaN(masterVideo.duration) && masterVideo.duration > 0
+    ? masterVideo.duration
+    : (totalDurationSec || (shots.length * 14.2));
+
+  const durPerShot = effectiveDuration / shots.length;
 
   shots.forEach((shot, index) => {
-    const startTime = index * durPerShot;
+    const startTime = shot.startTime !== undefined ? shot.startTime : (index * durPerShot);
+    const duration = shot.duration || durPerShot;
+    const endTime = shot.endTime !== undefined ? shot.endTime : (startTime + duration);
     
     if (shotMarkers) {
       const tick = document.createElement("div");
       tick.className = "shot-tick";
-      tick.style.left = `${(startTime / totalDurationSec) * 100}%`;
+      tick.style.left = `${(startTime / effectiveDuration) * 100}%`;
       tick.title = `${shot.shotId} (${formatTime(startTime)})`;
       shotMarkers.appendChild(tick);
     }
@@ -289,44 +296,338 @@ function renderShots(shots) {
     const card = document.createElement("div");
     card.className = "shot-card";
     card.id = `shot-card-${shot.shotId}`;
-    const charTag = shot.characterId ? `<span class="shot-char-tag">🎭 ${shot.characterId.replace('_', ' ').toUpperCase()}</span>` : '';
+    const charTag = shot.characterId ? `<span class="shot-char-tag">🎭 ${shot.characterId.replace(/_/g, ' ').toUpperCase()}</span>` : '';
+    const motionBadge = shot.motion || '🎥 2.5D Motion';
+    const fallbackImg = `/channel_assets/style/master_style_reference_16x9.jpg`;
+    const thumbUrl = shot.thumbnailUrl || fallbackImg;
+
     card.innerHTML = `
       <div class="shot-thumb-wrapper">
-        <video src="${shot.mediaUrl}#t=1" preload="metadata" muted playsinline></video>
+        <img src="${thumbUrl}" alt="${shot.shotId}" class="shot-thumb-img" onerror="this.src='${fallbackImg}'">
+        ${shot.videoUrl ? `<video src="${shot.videoUrl}#t=1" class="shot-video-preview" preload="metadata" muted playsinline></video>` : ''}
         <span class="shot-badge">${shot.shotId}</span>
-        <span class="shot-duration">${formatTime(startTime)}</span>
+        <span class="shot-duration">${formatTime(startTime)} – ${formatTime(endTime)}</span>
+        <span class="shot-motion-tag">${motionBadge}</span>
         <button class="edit-shot-btn" data-shotid="${shot.shotId}" title="Director Mode: Cast Character & Edit Prompt">Direct 🎬</button>
       </div>
-      <div class="shot-query" title="${shot.customPrompt || shot.query || shot.shotId}">
-        ${charTag} ${shot.customPrompt || shot.query || "Stock clip"}
+      <div class="shot-info-box">
+        <div class="shot-prompt-title" title="${shot.visualPrompt || shot.text || shot.shotId}">
+          ${charTag} ${shot.visualPrompt || shot.text || 'Cinematic narrative scene'}
+        </div>
+        <div class="shot-script-snippet" title="${shot.text || ''}">
+          💬 "${(shot.text || '').slice(0, 85)}${(shot.text || '').length > 85 ? '...' : ''}"
+        </div>
       </div>
     `;
 
     const directBtn = card.querySelector(".edit-shot-btn");
-    directBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      openDirectorModal(shot);
-    });
+    if (directBtn) {
+      directBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openDirectorModal(shot);
+      });
+    }
 
     card.addEventListener("click", () => {
       masterVideo.currentTime = startTime;
-      masterVideo.play();
+      masterVideo.play().catch(() => {});
       highlightActiveShot(shot.shotId);
     });
 
     const cardVideo = card.querySelector("video");
-    card.addEventListener("mouseenter", () => {
-      if (cardVideo) cardVideo.play().catch(() => {});
-    });
-    card.addEventListener("mouseleave", () => {
-      if (cardVideo) {
+    if (cardVideo) {
+      card.addEventListener("mouseenter", () => {
+        cardVideo.play().catch(() => {});
+      });
+      card.addEventListener("mouseleave", () => {
         cardVideo.pause();
         cardVideo.currentTime = 1;
-      }
-    });
+      });
+    }
 
     shotsGrid.appendChild(card);
   });
+
+  renderCapCutTimeline(shots);
+}
+
+let currentTimelineZoom = 1.0;
+
+function renderCapCutTimeline(shots) {
+  const container = document.getElementById("capcutTimelineEditor");
+  if (!container) return;
+
+  const visualsLane = document.getElementById("ccVisualsLane");
+  const captionsLane = document.getElementById("ccCaptionsLane");
+  const voiceLane = document.getElementById("ccVoiceLane");
+  const ruler = document.getElementById("ccRuler");
+  const totalTimeEl = document.getElementById("ccTotalTimecode");
+  const visualsCountEl = document.getElementById("ccVisualsCount");
+
+  const totalSec = masterVideo && masterVideo.duration && !isNaN(masterVideo.duration) && masterVideo.duration > 0
+    ? masterVideo.duration
+    : (totalDurationSec || (shots.length > 0 ? shots.length * 14.2 : 114));
+
+  if (totalTimeEl) totalTimeEl.textContent = formatFullTimecode(totalSec);
+  if (visualsCountEl) visualsCountEl.textContent = `${shots.length} clips`;
+
+  // 1. Build Ruler Ticks (every 5s, 10s, or 30s)
+  if (ruler) {
+    ruler.innerHTML = "";
+    const intervalSec = totalSec > 300 ? 30 : totalSec > 120 ? 15 : 5;
+    for (let t = 0; t <= totalSec; t += intervalSec) {
+      const pct = (t / totalSec) * 100;
+      const tick = document.createElement("div");
+      tick.className = `ruler-tick ${t % (intervalSec * 2) === 0 ? 'major' : ''}`;
+      tick.style.left = `${pct}%`;
+
+      const label = document.createElement("span");
+      label.className = "ruler-label";
+      label.style.left = `${pct}%`;
+      label.textContent = formatTime(t);
+
+      ruler.appendChild(tick);
+      ruler.appendChild(label);
+    }
+  }
+
+  // 2. Track V1: Visual Shots (Horizontal Sequencer Blocks)
+  if (visualsLane) {
+    visualsLane.innerHTML = "";
+    shots.forEach((shot, idx) => {
+      const dur = shot.duration || (totalSec / shots.length);
+      const start = shot.startTime !== undefined ? shot.startTime : (idx * (totalSec / shots.length));
+      const leftPct = (start / totalSec) * 100;
+      const widthPct = (dur / totalSec) * 100;
+      const thumb = shot.thumbnailUrl || '/channel_assets/style/master_style_reference_16x9.jpg';
+
+      const block = document.createElement("div");
+      block.className = "cc-clip-block";
+      block.id = `cc-clip-${shot.shotId}`;
+      block.style.left = `${leftPct}%`;
+      block.style.width = `calc(${widthPct}% - 2px)`;
+      block.title = `${shot.shotId}: ${shot.visualPrompt || shot.text || ''}`;
+
+      block.innerHTML = `
+        <img src="${thumb}" class="cc-clip-bg" onerror="this.src='/channel_assets/style/master_style_reference_16x9.jpg'">
+        <div class="cc-clip-overlay"></div>
+        <div class="cc-clip-content">
+          <span class="cc-clip-badge">${shot.shotId}</span>
+          <span class="cc-clip-motion">${shot.motion || '🎥 Push In'}</span>
+        </div>
+        <div class="cc-clip-bottom">
+          <span class="cc-clip-time">${formatTime(start)} – ${formatTime(start + dur)}</span>
+        </div>
+      `;
+
+      block.addEventListener("click", (e) => {
+        e.stopPropagation();
+        masterVideo.currentTime = start;
+        masterVideo.play().catch(() => {});
+        highlightActiveShot(shot.shotId);
+      });
+
+      visualsLane.appendChild(block);
+    });
+  }
+
+  // 3. Track V2: Captions (Subtitles / Karaoke Chunks)
+  if (captionsLane) {
+    captionsLane.innerHTML = "";
+    const chunks = episodeData?.karaokeData?.chunks || [];
+    if (chunks.length > 0) {
+      chunks.forEach((chunk, cIdx) => {
+        const startSec = (chunk.startMs || 0) / 1000;
+        const endSec = (chunk.endMs || (startSec + 4)) / 1000;
+        const dur = Math.max(1, endSec - startSec);
+        const leftPct = (startSec / totalSec) * 100;
+        const widthPct = (dur / totalSec) * 100;
+
+        const capBlock = document.createElement("div");
+        capBlock.className = "cc-caption-block";
+        capBlock.id = `cc-cap-${cIdx}`;
+        capBlock.style.left = `${leftPct}%`;
+        capBlock.style.width = `calc(${widthPct}% - 2px)`;
+        capBlock.textContent = chunk.text || (chunk.words ? chunk.words.map(w => w.word).join(" ") : `Caption ${cIdx + 1}`);
+        capBlock.title = capBlock.textContent;
+
+        capBlock.addEventListener("click", (e) => {
+          e.stopPropagation();
+          masterVideo.currentTime = startSec;
+          masterVideo.play().catch(() => {});
+        });
+
+        captionsLane.appendChild(capBlock);
+      });
+    } else {
+      shots.forEach((shot, sIdx) => {
+        const dur = shot.duration || (totalSec / shots.length);
+        const start = shot.startTime !== undefined ? shot.startTime : (sIdx * dur);
+        const leftPct = (start / totalSec) * 100;
+        const widthPct = (dur / totalSec) * 100;
+
+        const capBlock = document.createElement("div");
+        capBlock.className = "cc-caption-block";
+        capBlock.style.left = `${leftPct}%`;
+        capBlock.style.width = `calc(${widthPct}% - 2px)`;
+        capBlock.textContent = (shot.text || `Narration chunk ${sIdx + 1}`).slice(0, 35) + "...";
+
+        capBlock.addEventListener("click", () => {
+          masterVideo.currentTime = start;
+          masterVideo.play().catch(() => {});
+        });
+
+        captionsLane.appendChild(capBlock);
+      });
+    }
+  }
+
+  // 4. Track A1: Voiceover Waveform
+  if (voiceLane) {
+    voiceLane.innerHTML = "";
+    const voiceId = currentProject?.voiceProfile?.voiceId || "NARRATOR_V1";
+    shots.forEach((shot, sIdx) => {
+      const dur = shot.duration || (totalSec / shots.length);
+      const start = shot.startTime !== undefined ? shot.startTime : (sIdx * dur);
+      const leftPct = (start / totalSec) * 100;
+      const widthPct = (dur / totalSec) * 100;
+
+      const vBlock = document.createElement("div");
+      vBlock.className = "cc-voice-block";
+      vBlock.style.left = `${leftPct}%`;
+      vBlock.style.width = `calc(${widthPct}% - 2px)`;
+
+      let waveBars = "";
+      const barCount = Math.max(6, Math.floor(widthPct * 1.5));
+      for (let b = 0; b < barCount; b++) {
+        const h = Math.floor(4 + Math.sin(b * 0.8) * 8 + (b % 3) * 3);
+        waveBars += `<div class="wave-bar" style="height:${h}px"></div>`;
+      }
+
+      vBlock.innerHTML = `
+        <span style="font-size:0.65rem; color:#818cf8; white-space:nowrap;">🎙️ ${voiceId}</span>
+        <div class="cc-voice-wave">${waveBars}</div>
+      `;
+
+      vBlock.addEventListener("click", () => {
+        masterVideo.currentTime = start;
+        masterVideo.play().catch(() => {});
+      });
+
+      voiceLane.appendChild(vBlock);
+    });
+  }
+
+  setupCapCutTimelineInteractions(totalSec);
+}
+
+function formatFullTimecode(sec) {
+  if (isNaN(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  const frames = Math.floor((sec % 1) * 30);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}:${String(frames).padStart(2, "0")}`;
+}
+
+function setupCapCutTimelineInteractions(totalSec) {
+  const viewport = document.getElementById("ccTimelineViewport");
+  const zoomIn = document.getElementById("ccZoomIn");
+  const zoomOut = document.getElementById("ccZoomOut");
+  const zoomFit = document.getElementById("ccZoomFit");
+  const zoomLevel = document.getElementById("ccZoomLevel");
+  const exportBtn = document.getElementById("ccExportCapcutBtn");
+  const splitBtn = document.getElementById("ccSplitBtn");
+
+  if (!viewport || viewport.dataset.initialized === "true") return;
+  viewport.dataset.initialized = "true";
+
+  function seekFromClientX(clientX) {
+    const rect = viewport.getBoundingClientRect();
+    const laneOffset = 140; // width of track headers
+    const trackWidth = rect.width - laneOffset;
+    if (trackWidth <= 0) return;
+    const relX = Math.max(0, Math.min(trackWidth, clientX - rect.left - laneOffset));
+    const targetTime = (relX / trackWidth) * (masterVideo.duration || totalSec);
+    masterVideo.currentTime = targetTime;
+  }
+
+  // Click & Drag Scrubbing
+  let isScrubbing = false;
+  viewport.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".track-header")) return;
+    isScrubbing = true;
+    seekFromClientX(e.clientX);
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (isScrubbing) seekFromClientX(e.clientX);
+  });
+
+  window.addEventListener("mouseup", () => {
+    isScrubbing = false;
+  });
+
+  // Zoom controls
+  if (zoomIn) {
+    zoomIn.addEventListener("click", () => {
+      currentTimelineZoom = Math.min(3.0, currentTimelineZoom + 0.25);
+      applyTimelineZoom();
+    });
+  }
+  if (zoomOut) {
+    zoomOut.addEventListener("click", () => {
+      currentTimelineZoom = Math.max(0.5, currentTimelineZoom - 0.25);
+      applyTimelineZoom();
+    });
+  }
+  if (zoomFit) {
+    zoomFit.addEventListener("click", () => {
+      currentTimelineZoom = 1.0;
+      applyTimelineZoom();
+    });
+  }
+
+  function applyTimelineZoom() {
+    if (zoomLevel) zoomLevel.textContent = `${Math.round(currentTimelineZoom * 100)}%`;
+    const lanes = document.querySelectorAll(".track-lane");
+    const rEl = document.getElementById("ccRuler");
+    const w = `${100 * currentTimelineZoom}%`;
+    lanes.forEach(l => l.style.minWidth = w);
+    if (rEl) rEl.style.minWidth = w;
+  }
+
+  // Export to CapCut Draft
+  if (exportBtn) {
+    exportBtn.addEventListener("click", async () => {
+      exportBtn.disabled = true;
+      exportBtn.textContent = "Exporting...";
+      try {
+        const res = await fetch("/api/export/capcut", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ episodeId: currentEpisode })
+        });
+        const d = await res.json();
+        if (d.success) {
+          alert(`✅ CapCut Project Draft generated successfully!\nLocation: ${d.draftFolder || d.projectPath}`);
+        } else {
+          alert(`CapCut Export: ${d.error || 'Failed'}`);
+        }
+      } catch (err) {
+        alert("Error exporting CapCut draft: " + err.message);
+      } finally {
+        exportBtn.disabled = false;
+        exportBtn.textContent = "🎬 Open in CapCut";
+      }
+    });
+  }
+
+  // Split Clip
+  if (splitBtn) {
+    splitBtn.addEventListener("click", () => {
+      alert(`✂️ Split marker set at timecode ${formatFullTimecode(masterVideo.currentTime)}.`);
+    });
+  }
 }
 
 function highlightActiveShot(shotId) {
@@ -340,7 +641,7 @@ function highlightActiveShot(shotId) {
 // Playback Controls
 function togglePlay() {
   if (masterVideo.paused || masterVideo.ended) {
-    masterVideo.play();
+    masterVideo.play().catch(() => {});
   } else {
     masterVideo.pause();
   }
@@ -374,15 +675,55 @@ if (masterVideo) {
 
   masterVideo.addEventListener("timeupdate", () => {
     const cur = masterVideo.currentTime;
+    const dur = masterVideo.duration || totalDurationSec || 114;
     if (currentTimeEl) currentTimeEl.textContent = formatTime(cur);
-    const pct = (cur / (masterVideo.duration || totalDurationSec)) * 100;
+    const pct = (cur / dur) * 100;
     if (timelineProgress) timelineProgress.style.width = `${pct}%`;
 
+    // CapCut Playhead & Timecode Sync
+    const ccTimecode = document.getElementById("ccCurrentTimecode");
+    if (ccTimecode) ccTimecode.textContent = formatFullTimecode(cur);
+
+    const playhead = document.getElementById("ccPlayhead");
+    const viewport = document.getElementById("ccTimelineViewport");
+    if (playhead && viewport) {
+      const laneOffset = 140; // track headers width
+      const trackWidth = viewport.clientWidth - laneOffset;
+      if (trackWidth > 0) {
+        const px = laneOffset + (cur / dur) * trackWidth;
+        playhead.style.left = `${px}px`;
+      }
+    }
+
+    // Active Clip & Shot highlight
     if (episodeData && episodeData.shots && episodeData.shots.length > 0) {
-      const durPerShot = (masterVideo.duration || totalDurationSec) / episodeData.shots.length;
-      const activeIndex = Math.min(Math.floor(cur / durPerShot), episodeData.shots.length - 1);
-      const activeShot = episodeData.shots[activeIndex];
-      if (activeShot) highlightActiveShot(activeShot.shotId);
+      const shots = episodeData.shots;
+      let activeShot = null;
+      for (const s of shots) {
+        if (cur >= s.startTime && cur <= s.endTime) {
+          activeShot = s;
+          break;
+        }
+      }
+      if (!activeShot) {
+        const durPerShot = dur / shots.length;
+        const idx = Math.min(Math.floor(cur / durPerShot), shots.length - 1);
+        activeShot = shots[idx];
+      }
+
+      if (activeShot) {
+        highlightActiveShot(activeShot.shotId);
+        
+        // Highlight in CapCut timeline V1 track
+        document.querySelectorAll(".cc-clip-block").forEach(b => b.classList.remove("active"));
+        const ccActive = document.getElementById(`cc-clip-${activeShot.shotId}`);
+        if (ccActive) ccActive.classList.add("active");
+
+        const activePill = document.getElementById("ccActiveClipPill");
+        if (activePill) {
+          activePill.textContent = `Active: ${activeShot.shotId} (${formatTime(activeShot.startTime)} - ${formatTime(activeShot.endTime)})`;
+        }
+      }
     }
 
     // Live Synchronized Karaoke Subtitle HUD
