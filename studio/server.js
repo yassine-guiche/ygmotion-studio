@@ -67,7 +67,19 @@ function streamFile(req, res, filePath) {
     return res.end("404 Not Found");
   }
 
-  const stat = fs.statSync(filePath);
+  let stat;
+  try {
+    stat = fs.statSync(filePath);
+  } catch (e) {
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    return res.end("404 Not Found");
+  }
+
+  if (stat.isDirectory()) {
+    res.writeHead(403, { "Content-Type": "text/plain" });
+    return res.end("403 Forbidden");
+  }
+
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
   const range = req.headers.range;
@@ -75,9 +87,30 @@ function streamFile(req, res, filePath) {
   if (range) {
     const parts = range.replace(/bytes=/, "").split("-");
     const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+    let end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+
+    // Validate byte range boundaries (prevent ERR_OUT_OF_RANGE)
+    if (isNaN(start) || start < 0 || start >= stat.size || end < start) {
+      res.writeHead(416, {
+        "Content-Range": `bytes */${stat.size}`,
+        "Access-Control-Allow-Origin": "*"
+      });
+      return res.end();
+    }
+
+    if (isNaN(end) || end >= stat.size) {
+      end = stat.size - 1;
+    }
+
     const chunksize = (end - start) + 1;
     const file = fs.createReadStream(filePath, { start, end });
+    file.on("error", (err) => {
+      console.warn("Media stream warning:", err.message);
+      if (!res.headersSent) {
+        res.writeHead(500);
+      }
+      res.end();
+    });
 
     res.writeHead(206, {
       "Content-Range": `bytes ${start}-${end}/${stat.size}`,
@@ -91,9 +124,18 @@ function streamFile(req, res, filePath) {
     res.writeHead(200, {
       "Content-Length": stat.size,
       "Content-Type": contentType,
+      "Accept-Ranges": "bytes",
       "Access-Control-Allow-Origin": "*"
     });
-    fs.createReadStream(filePath).pipe(res);
+    const file = fs.createReadStream(filePath);
+    file.on("error", (err) => {
+      console.warn("File stream warning:", err.message);
+      if (!res.headersSent) {
+        res.writeHead(500);
+      }
+      res.end();
+    });
+    file.pipe(res);
   }
 }
 
@@ -1216,4 +1258,11 @@ server.listen(PORT, () => {
   console.log("🚀  YGMOTION STUDIO V3 RUNNING (Multi-Channel Platform)");
   console.log(`    URL: http://localhost:${PORT}`);
   console.log("=======================================================\n");
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Global uncaughtException caught:", err.message);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("Global unhandledRejection caught:", reason);
 });
