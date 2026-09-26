@@ -2681,6 +2681,128 @@ if (btnConfirmSceneDirector) {
   });
 }
 
+// ==========================================
+// 1-CLICK AUTOMATED VIDEO PRODUCER CONTROLLER
+// ==========================================
+const autoProducerModal = document.getElementById("autoProducerModal");
+const navAutoProducerBtn = document.getElementById("navAutoProducerBtn");
+const launcherAutoProduceBtn = document.getElementById("launcherAutoProduceBtn");
+const closeAutoProducerModalBtn = document.getElementById("closeAutoProducerModalBtn");
+const cancelAutoProducerBtn = document.getElementById("cancelAutoProducerBtn");
+const startAutoProducerBtn = document.getElementById("startAutoProducerBtn");
+const autoProducerTitleInput = document.getElementById("autoProducerTitleInput");
+const autoProducerStyleSelect = document.getElementById("autoProducerStyleSelect");
+const autoProducerProgressCard = document.getElementById("autoProducerProgressCard");
+const autoProducerProgressBar = document.getElementById("autoProducerProgressBar");
+const autoProducerPctLabel = document.getElementById("autoProducerPctLabel");
+const autoProducerStepLabel = document.getElementById("autoProducerStepLabel");
+const autoProducerSubtext = document.getElementById("autoProducerSubtext");
+
+function openAutoProducerModal(initialTitle = "") {
+  if (autoProducerTitleInput) {
+    autoProducerTitleInput.value = initialTitle;
+  }
+  if (autoProducerProgressCard) autoProducerProgressCard.style.display = "none";
+  if (startAutoProducerBtn) {
+    startAutoProducerBtn.disabled = false;
+    startAutoProducerBtn.innerHTML = `<span>Generate Full Video 🎬</span>`;
+  }
+  if (autoProducerModal) autoProducerModal.style.display = "flex";
+  if (autoProducerTitleInput) autoProducerTitleInput.focus();
+}
+
+function closeAutoProducerModal() {
+  if (autoProducerModal) autoProducerModal.style.display = "none";
+}
+
+if (navAutoProducerBtn) navAutoProducerBtn.addEventListener("click", () => openAutoProducerModal());
+if (launcherAutoProduceBtn) launcherAutoProduceBtn.addEventListener("click", () => openAutoProducerModal());
+if (closeAutoProducerModalBtn) closeAutoProducerModalBtn.addEventListener("click", closeAutoProducerModal);
+if (cancelAutoProducerBtn) cancelAutoProducerBtn.addEventListener("click", closeAutoProducerModal);
+
+// Idea pills
+document.querySelectorAll(".auto-idea-pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    const t = pill.getAttribute("data-title");
+    if (autoProducerTitleInput) autoProducerTitleInput.value = t;
+  });
+});
+
+if (startAutoProducerBtn) {
+  startAutoProducerBtn.addEventListener("click", async () => {
+    const title = autoProducerTitleInput ? autoProducerTitleInput.value.trim() : "";
+    if (!title) {
+      alert("Please enter a video title or select an idea.");
+      return;
+    }
+
+    const styleId = autoProducerStyleSelect ? autoProducerStyleSelect.value : (currentProject?.category || "crime_suspense");
+
+    startAutoProducerBtn.disabled = true;
+    startAutoProducerBtn.innerHTML = `<span>Producing Video... 🎬</span>`;
+    if (autoProducerProgressCard) autoProducerProgressCard.style.display = "block";
+    if (autoProducerProgressBar) autoProducerProgressBar.style.width = "5%";
+    if (autoProducerPctLabel) autoProducerPctLabel.textContent = "5%";
+    if (autoProducerStepLabel) autoProducerStepLabel.textContent = "Starting automated production...";
+
+    try {
+      const res = await fetch("/api/pipeline/auto-produce", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, styleId })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to start automated producer");
+
+      const createdEpId = data.episodeId;
+
+      // Poll progress until complete
+      const pollTimer = setInterval(async () => {
+        try {
+          const sRes = await fetch(`/api/render/status?episodeId=${createdEpId}`);
+          if (sRes.ok) {
+            const statusData = await sRes.json();
+            const pct = statusData.progress || 0;
+            if (autoProducerProgressBar) autoProducerProgressBar.style.width = `${pct}%`;
+            if (autoProducerPctLabel) autoProducerPctLabel.textContent = `${pct}%`;
+            if (autoProducerStepLabel) autoProducerStepLabel.textContent = statusData.step || "Processing...";
+
+            if (statusData.status === "completed") {
+              clearInterval(pollTimer);
+              if (autoProducerStepLabel) autoProducerStepLabel.textContent = "✓ 1080p Master Video Ready!";
+              if (autoProducerSubtext) autoProducerSubtext.textContent = "Production completed successfully. Loading episode...";
+
+              setTimeout(async () => {
+                closeAutoProducerModal();
+                showEditor();
+                await loadEpisodes();
+                await loadEpisode(createdEpId);
+
+                // Auto-play master video
+                if (masterVideo) {
+                  masterVideo.play().catch(() => {});
+                }
+              }, 1200);
+            } else if (statusData.status === "failed") {
+              clearInterval(pollTimer);
+              alert("Production error: " + (statusData.error || "Unknown render error"));
+              startAutoProducerBtn.disabled = false;
+              startAutoProducerBtn.innerHTML = `<span>Retry Production 🎬</span>`;
+            }
+          }
+        } catch (e) {
+          console.warn("Progress poll warning:", e);
+        }
+      }, 1500);
+
+    } catch (err) {
+      alert("Error: " + err.message);
+      startAutoProducerBtn.disabled = false;
+      startAutoProducerBtn.innerHTML = `<span>Generate Full Video 🎬</span>`;
+    }
+  });
+}
+
 // Initialize Studio Application
 (async function init() {
   try {

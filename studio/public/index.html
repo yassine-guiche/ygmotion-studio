@@ -109,6 +109,11 @@
           <span>New Episode</span>
         </button>
 
+        <!-- 1-Click Automated Video Producer -->
+        <button id="navAutoProducerBtn" class="btn btn-warning btn-glow" title="1-Click Title to Full 1080p Master Video" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; border: none; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); display: flex; align-items: center; gap: 6px;">
+          <span>⚡ 1-Click Video Producer</span>
+        </button>
+
         <!-- Google Gemini Cloud AI Status -->
         <div class="nav-vram-card" id="ygmotionGeminiCard" title="Google Gemini Cloud AI Engine" style="border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.08); display: flex; align-items: center; gap: 8px;">
           <span class="vram-dot active" id="ygmotionGeminiDot" style="background: #3b82f6; box-shadow: 0 0 8px #3b82f6;"></span>
@@ -140,6 +145,9 @@
             <p>Universal Multi-Channel Video Engine. Choose an existing channel project or spin up a new channel with locked character face DNA, automated audio ducking, and Colab GPU rendering.</p>
           </div>
           <div class="launcher-hero-actions">
+            <button id="launcherAutoProduceBtn" class="btn btn-primary btn-glow" style="padding: 12px 24px; font-size: 0.95rem; background: linear-gradient(135deg, #2563eb, #7c3aed); border: none; font-weight: 800; box-shadow: 0 0 25px rgba(37, 99, 235, 0.4);">
+              <span>⚡ 1-Click Video Producer (Title &rarr; 1080p Video)</span>
+            </button>
             <button id="launcherIngestBtn" class="btn btn-warning btn-glow" style="padding: 12px 24px; font-size: 0.95rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; border: none; box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);">
               <span>⚡ Ingest YouTube Link (Analyze & Clone Niche)</span>
             </button>
@@ -1439,6 +1447,77 @@
       </div>
       <div class="modal-footer" style="padding: 12px 20px;">
         <button class="btn btn-secondary" id="closeCapcutModalFooterBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 1-CLICK AUTOMATED VIDEO PRODUCER MODAL                    -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="autoProducerModal" style="display: none; z-index: 10000;">
+    <div class="modal" style="max-width: 650px; background: #0c0e17; border: 1px solid rgba(59, 130, 246, 0.4); box-shadow: 0 0 50px rgba(37, 99, 235, 0.25);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border-subtle); padding: 18px 24px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="font-size: 1.8rem;">⚡</div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.2rem; color: #f8fafc;">1-Click Video Producer</h3>
+            <span style="font-size: 0.8rem; color: #60a5fa;">Title &rarr; Gemini Script &rarr; Flux Visuals &rarr; 2.5D Motion &rarr; 1080p Master Video</span>
+          </div>
+        </div>
+        <button class="modal-close" id="closeAutoProducerModalBtn">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="font-weight: 700; color: #f8fafc; margin-bottom: 8px; display: block;">Video Title / Premise:</label>
+          <input type="text" id="autoProducerTitleInput" class="form-input" placeholder="e.g. The Vanishing Officer of Route 9" style="width: 100%; font-size: 1rem; padding: 12px 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15);">
+          
+          <!-- Suggested Viral Ideas -->
+          <div style="margin-top: 10px;">
+            <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Or Pick a High-CTR Concept:</span>
+            <div id="autoProducerSuggestions" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+              <button class="btn btn-secondary btn-sm auto-idea-pill" data-title="The Bodycam Footage They Tried to Delete">🎬 The Bodycam Footage They Tried to Delete</button>
+              <button class="btn btn-secondary btn-sm auto-idea-pill" data-title="The 3:14 AM Frequency">📻 The 3:14 AM Frequency</button>
+              <button class="btn btn-secondary btn-sm auto-idea-pill" data-title="When SUSPECTS Try to Outsmart an Ex-Cop">🚔 When SUSPECTS Try to Outsmart an Ex-Cop</button>
+              <button class="btn btn-secondary btn-sm auto-idea-pill" data-title="The Dark Web Server in Zurich">💻 The Dark Web Server in Zurich</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+          <div class="form-group">
+            <label style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px; display: block;">Channel Niche Archetype:</label>
+            <select id="autoProducerStyleSelect" class="form-select" style="width: 100%; padding: 8px 10px; background: rgba(0,0,0,0.4);">
+              <option value="crime_suspense">True Crime & Police Bodycam</option>
+              <option value="visual_documentary">Cinematic Business Documentary</option>
+              <option value="ranks_pov">POV High-Retention Progression</option>
+              <option value="stickman_animation">2D Observational Storytelling</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px; display: block;">Visual & Motion Pipeline:</label>
+            <div style="padding: 9px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; font-size: 0.8rem; color: #38bdf8;">
+              Flux 16:9 + 2.5D Camera Motions
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Pipeline Progress Card -->
+        <div id="autoProducerProgressCard" style="display: none; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span id="autoProducerStepLabel" style="font-size: 0.85rem; font-weight: 700; color: #60a5fa;">Starting production...</span>
+            <span id="autoProducerPctLabel" style="font-size: 0.85rem; font-weight: 800; color: #38bdf8;">0%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+            <div id="autoProducerProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2563eb, #00f0ff); transition: width 0.4s ease;"></div>
+          </div>
+          <p id="autoProducerSubtext" style="font-size: 0.75rem; color: #94a3b8; margin: 8px 0 0 0;">Please wait while the AI writes, visualizes, animates, and renders your 1080p master video.</p>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn btn-secondary" id="cancelAutoProducerBtn">Cancel</button>
+        <button class="btn btn-primary btn-glow" id="startAutoProducerBtn" style="background: linear-gradient(135deg, #2563eb, #7c3aed); font-weight: 800; padding: 10px 24px;">
+          <span>Generate Full Video 🎬</span>
+        </button>
       </div>
     </div>
   </div>

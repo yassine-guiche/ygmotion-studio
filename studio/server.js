@@ -22,6 +22,7 @@ const scriptGenerator = require("../engine/ai/script_generator");
 const voiceDesigner = require("../engine/audio/voice_designer");
 const motionEngine = require("../engine/motion/motion_engine");
 const geminiEngine = require("../engine/ai/gemini_engine");
+const automatedProducer = require("../engine/pipeline/automated_producer");
 
 const calliopeBridge = new CalliopeBridge();
 
@@ -947,7 +948,7 @@ const server = http.createServer(async (req, res) => {
   // API: Get Real-Time Render Progress Status
   if (pathname === "/api/render/status" && req.method === "GET") {
     const epId = url.searchParams.get("episodeId") || "EP001";
-    const epDir = path.join(paths.episodesDir, epId);
+    const epDir = projectManager.resolveEpisodeDir(epId, paths.projectDir);
     const progressFile = path.join(epDir, "render_progress.json");
     if (fs.existsSync(progressFile)) {
       try {
@@ -958,6 +959,45 @@ const server = http.createServer(async (req, res) => {
     }
     res.writeHead(200, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ status: "idle", progress: 0 }));
+  }
+
+  // API: 1-Click Automated Producer (Title -> 1080p Master Video)
+  if (pathname === "/api/pipeline/auto-produce" && req.method === "POST") {
+    let body = "";
+    req.on("data", c => { body += c; });
+    req.on("end", async () => {
+      try {
+        const { title, episodeId, styleId } = JSON.parse(body || "{}");
+        if (!title) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({ error: "Missing required video title" }));
+        }
+
+        const targetEpId = episodeId || automatedProducer.getNextEpisodeId(paths.projectDir);
+
+        // Start production pipeline asynchronously
+        automatedProducer.produceVideoFromTitle({
+          title,
+          episodeId: targetEpId,
+          styleId: styleId || paths.active?.category || "crime_suspense",
+          projectDirOverride: paths.projectDir
+        }).catch(err => {
+          console.error(`[PIPELINE ASYNC ERROR] ${targetEpId}:`, err.message);
+        });
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({
+          success: true,
+          episodeId: targetEpId,
+          title,
+          message: `1-Click production initiated for "${title}". Track progress at /api/render/status?episodeId=${targetEpId}`
+        }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
   }
 
   // API: Calliope Studio Integration
