@@ -581,8 +581,10 @@ Welcome to ${name}. Pay close attention to what happens next, because everything
 
     if (fs.existsSync(base) && path.basename(base).startsWith("EP")) return base;
 
-    const rootEp = path.join(ROOT_DIR, "episodes", episodeId);
-    if (fs.existsSync(rootEp)) return rootEp;
+    if (!projectOverride) {
+      const rootEp = path.join(ROOT_DIR, "episodes", episodeId);
+      if (fs.existsSync(rootEp)) return rootEp;
+    }
 
     if (!fs.existsSync(epPath)) fs.mkdirSync(epPath, { recursive: true });
     return epPath;
@@ -597,6 +599,59 @@ Welcome to ${name}. Pay close attention to what happens next, because everything
     const assetPath = path.join(base, "channel_assets");
     if (!fs.existsSync(assetPath)) fs.mkdirSync(assetPath, { recursive: true });
     return assetPath;
+  }
+
+  createEpisode(episodeId = "EP002", title = "New Episode", styleId = "crime_suspense", projectOverride = null) {
+    const epDir = this.resolveEpisodeDir(episodeId, projectOverride);
+    if (!fs.existsSync(epDir)) fs.mkdirSync(epDir, { recursive: true });
+
+    const audioDir = path.join(epDir, "audio");
+    if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
+
+    const safeEpId = (episodeId || "EP002").toUpperCase();
+
+    // Starter script
+    const scriptPath = path.join(epDir, "script_master.md");
+    if (!fs.existsSync(scriptPath)) {
+      const starterMd = `# ${title || safeEpId}
+**Episode ID:** ${safeEpId}  
+**Archetype:** ${styleId}  
+
+## Scene 1: The Cold Hook
+The scene unfolds with rising tension and unmistakable mystery.
+`;
+      fs.writeFileSync(scriptPath, starterMd, "utf8");
+    }
+
+    // Starter manifest
+    const manifestPath = path.join(epDir, "footage_manifest.json");
+    if (!fs.existsSync(manifestPath)) {
+      const manifest = {
+        episodeId: safeEpId,
+        title: title || safeEpId,
+        style: styleId,
+        updatedAt: new Date().toISOString(),
+        shots: [
+          {
+            shotId: "shot_001",
+            partId: 1,
+            duration: 5.0,
+            text: `Beginning of ${title || safeEpId}.`,
+            visualPrompt: `Cinematic 16:9 ultra-detailed scene, ${styleId} aesthetic`,
+            motionType: "push_in",
+            audio: "chunk_part_01.mp3",
+            visualType: "ai_scene"
+          }
+        ]
+      };
+      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
+    }
+
+    return {
+      id: safeEpId,
+      title: title || safeEpId,
+      path: epDir
+    };
   }
 }
 

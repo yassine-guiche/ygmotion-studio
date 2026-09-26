@@ -812,27 +812,83 @@ if (openFolderBtn) {
   });
 }
 
+// Real-Time Render Pipeline Controller
+let renderPollInterval = null;
+
+async function launchVideoRender(targetEpisodeId, targetStyleId) {
+  const epId = targetEpisodeId || currentEpisode || "EP001";
+  const stId = targetStyleId || currentStyle || "crime_suspense";
+  const styleName = (allStyles[stId] || {}).name || stId;
+
+  if (renderBanner) renderBanner.style.display = "flex";
+  const renderBannerText = document.getElementById("renderBannerText");
+  const renderStatusText = document.getElementById("renderStatusText");
+  if (renderBannerText) renderBannerText.textContent = `🎬 [5%] Starting 1080p master render for ${epId} with [${styleName}]...`;
+  if (renderStatusText) renderStatusText.textContent = `Rendering: 5%`;
+
+  showToast(`🚀 Rendering 1080p Master Video for ${epId}...`, "info");
+
+  try {
+    const res = await fetch("/api/render", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        episodeId: epId,
+        styleId: stId
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to trigger render");
+    }
+
+    if (renderPollInterval) clearInterval(renderPollInterval);
+    renderPollInterval = setInterval(async () => {
+      try {
+        const sRes = await fetch(`/api/render/status?episodeId=${epId}`);
+        const statusData = await sRes.json();
+
+        if (statusData.status === "rendering") {
+          const pct = statusData.progress || 10;
+          if (renderBannerText) renderBannerText.textContent = `🎬 [${pct}%] ${statusData.step || 'Encoding video...'}`;
+          if (renderStatusText) renderStatusText.textContent = `Rendering: ${pct}%`;
+        } else if (statusData.status === "completed") {
+          clearInterval(renderPollInterval);
+          renderPollInterval = null;
+          const sz = statusData.finalVideo?.sizeMb || "60";
+          if (renderBannerText) renderBannerText.textContent = `✅ Master 1080p Video Ready (${sz} MB)!`;
+          if (renderStatusText) renderStatusText.textContent = `1080p MP4 ready (${sz} MB)`;
+          showToast(`🎉 1080p Master Video Ready (${sz} MB)!`, "success");
+
+          await loadEpisode(epId);
+          setTimeout(() => {
+            if (renderBanner) renderBanner.style.display = "none";
+          }, 3500);
+        } else if (statusData.status === "failed") {
+          clearInterval(renderPollInterval);
+          renderPollInterval = null;
+          if (renderBannerText) renderBannerText.textContent = `❌ Render Notice: ${statusData.error || statusData.step}`;
+          if (renderStatusText) renderStatusText.textContent = "Render failed";
+          showToast(`❌ Render Failed: ${statusData.error || statusData.step}`, "error");
+        }
+      } catch (e) {
+        console.warn("Render status poll error:", e);
+      }
+    }, 1500);
+
+  } catch (err) {
+    console.error("Render trigger error:", err);
+    showToast(`❌ Error launching render: ${err.message}`, "error");
+    if (renderBanner) renderBanner.style.display = "none";
+  }
+}
+
 // Trigger Render with Selected Style
 if (triggerRenderBtn) {
-  triggerRenderBtn.addEventListener("click", async () => {
+  triggerRenderBtn.addEventListener("click", () => {
     const styleName = (allStyles[currentStyle] || {}).name || currentStyle;
     if (confirm(`Render ${currentEpisode || "EP001"} with style archetype: [${styleName}]?`)) {
-      if (renderBanner) renderBanner.style.display = "flex";
-      const renderBannerText = document.getElementById("renderBannerText");
-      if (renderBannerText) renderBannerText.textContent = `Rendering with ${styleName}... Check terminal for real-time progress!`;
-      try {
-        await fetch("/api/render", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            episodeId: currentEpisode || "EP001",
-            styleId: currentStyle
-          })
-        });
-        alert(`Render launched with [${styleName}]!`);
-      } catch (err) {
-        console.error("Render trigger error:", err);
-      }
+      launchVideoRender(currentEpisode, currentStyle);
     }
   });
 }
@@ -931,11 +987,33 @@ if (closeModalBtn) closeModalBtn.addEventListener("click", () => { if (newEpisod
 if (cancelModalBtn) cancelModalBtn.addEventListener("click", () => { if (newEpisodeModal) newEpisodeModal.style.display = "none"; });
 
 if (startPipelineBtn) {
-  startPipelineBtn.addEventListener("click", () => {
+  startPipelineBtn.addEventListener("click", async () => {
     const epId = document.getElementById("modalEpId")?.value.trim() || "EP002";
-    const style = document.getElementById("modalStyle")?.value || "ranks_pov";
-    alert(`Episode ${epId} configured with style [${style}]! Run:\nnode engine/scripts/pipeline.js full ${epId}\n\nTo generate voice, fetch stock clips, and render 1080p video.`);
-    if (newEpisodeModal) newEpisodeModal.style.display = "none";
+    const style = document.getElementById("modalStyle")?.value || "crime_suspense";
+    try {
+      startPipelineBtn.disabled = true;
+      startPipelineBtn.textContent = "Creating Episode...";
+      const res = await fetch("/api/episode/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ episodeId: epId, styleId: style })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (newEpisodeModal) newEpisodeModal.style.display = "none";
+        showToast(`✓ Episode ${epId} initialized with archetype [${style}]!`, "success");
+        await loadEpisodes();
+        await loadEpisode(epId);
+        showEditor();
+      } else {
+        alert("Error creating episode: " + (data.error || "Failed"));
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      startPipelineBtn.disabled = false;
+      startPipelineBtn.textContent = "Start Production Pipeline 🚀";
+    }
   });
 }
 
@@ -2596,13 +2674,7 @@ if (btnConfirmSceneDirector) {
       btnConfirmSceneDirector.textContent = "Assembling Master 1080p Video...";
       sceneDirectorModal.style.display = "none";
       showEditor();
-      
-      const renderBtn = document.getElementById("triggerRenderBtn") || document.getElementById("renderEpisodeBtn");
-      if (renderBtn) {
-        renderBtn.click();
-      } else {
-        alert("Master scenes locked. Ready in Studio Editor for Final Render!");
-      }
+      launchVideoRender(currentEpisodeId || currentEpisode || "EP001", currentStyle);
     } finally {
       btnConfirmSceneDirector.disabled = false;
       btnConfirmSceneDirector.textContent = "Lock All Scenes & Assemble Master Video 🚀";
@@ -2643,6 +2715,7 @@ function initAiCoDirector() {
   const drawer = document.getElementById("aiDirectorDrawer");
   const openBtn = document.getElementById("openAiDirectorBtn");
   const closeBtn = document.getElementById("closeAiDirectorBtn");
+  const tabGemini = document.getElementById("drawerTabGemini");
   const tabQwen = document.getElementById("drawerTabQwen");
   const tabDeepseek = document.getElementById("drawerTabDeepseek");
   const messagesBox = document.getElementById("drawerMessages");
@@ -2651,6 +2724,10 @@ function initAiCoDirector() {
   const sendBtn = document.getElementById("drawerSendBtn");
   const clearBtn = document.getElementById("drawerClearBtn");
   const modelLabel = document.getElementById("drawerActiveModelLabel");
+
+  const geminiCard = document.getElementById("ygmotionGeminiCard");
+  const geminiDot = document.getElementById("ygmotionGeminiDot");
+  const geminiText = document.getElementById("ygmotionGeminiText");
 
   const vramDot = document.getElementById("ygmotionVramDot");
   const vramText = document.getElementById("ygmotionVramText");
@@ -2662,7 +2739,7 @@ function initAiCoDirector() {
   const actRetentionAudit = document.getElementById("actRetentionAudit");
   const actRefine = document.getElementById("actRefineScene");
 
-  let activeModel = "qwen2.5-coder:7b";
+  let activeModel = "gemini";
   let isGenerating = false;
   let chatHistory = [];
 
@@ -2717,19 +2794,50 @@ function initAiCoDirector() {
   // Model Toggle
   function selectModel(model) {
     activeModel = model;
-    if (model.includes("qwen")) {
-      tabQwen.className = "d-model-btn active-qwen";
-      tabDeepseek.className = "d-model-btn";
+    if (tabGemini) tabGemini.className = "d-model-btn";
+    if (tabQwen) tabQwen.className = "d-model-btn";
+    if (tabDeepseek) tabDeepseek.className = "d-model-btn";
+
+    if (model === "gemini") {
+      if (tabGemini) tabGemini.className = "d-model-btn active-gemini";
+      if (modelLabel) modelLabel.textContent = "Model: Google Gemini Flash (Cloud)";
+    } else if (model.includes("qwen")) {
+      if (tabQwen) tabQwen.className = "d-model-btn active-qwen";
       if (modelLabel) modelLabel.textContent = "Model: Qwen 2.5 Coder (7B)";
     } else {
-      tabQwen.className = "d-model-btn";
-      tabDeepseek.className = "d-model-btn active-deepseek";
+      if (tabDeepseek) tabDeepseek.className = "d-model-btn active-deepseek";
       if (modelLabel) modelLabel.textContent = "Model: DeepSeek R1 (8B)";
     }
   }
 
+  if (tabGemini) tabGemini.addEventListener("click", () => selectModel("gemini"));
   if (tabQwen) tabQwen.addEventListener("click", () => selectModel("qwen2.5-coder:7b"));
   if (tabDeepseek) tabDeepseek.addEventListener("click", () => selectModel("deepseek-r1:8b"));
+
+  // Gemini Cloud Telemetry
+  async function pollGemini() {
+    try {
+      const res = await fetch("/api/ai/gemini/status");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.online) {
+          if (geminiDot) {
+            geminiDot.style.background = "#10b981";
+            geminiDot.style.boxShadow = "0 0 8px #10b981";
+          }
+          if (geminiText) geminiText.textContent = "Gemini Flash Online";
+        } else {
+          if (geminiDot) {
+            geminiDot.style.background = "#ef4444";
+            geminiDot.style.boxShadow = "0 0 8px #ef4444";
+          }
+          if (geminiText) geminiText.textContent = "Gemini Offline";
+        }
+      }
+    } catch (e) {}
+  }
+  pollGemini();
+  setInterval(pollGemini, 10000);
 
   // VRAM Telemetry & Free GPU Eject
   async function pollVram() {
@@ -2787,6 +2895,25 @@ function initAiCoDirector() {
     let fullText = "";
 
     try {
+      if (activeModel === "gemini") {
+        contentEl.innerHTML = `<span style="color: #60a5fa;">Directing with Google Gemini Cloud AI... ▍</span>`;
+        const res = await fetch("/api/ai/gemini/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: text,
+            history: chatHistory.map(h => ({ role: h.role, text: h.content }))
+          })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || "Gemini chat request failed");
+        fullText = data.reply;
+        renderFinal(contentEl, fullText, false);
+        chatHistory.push({ role: "user", content: text });
+        chatHistory.push({ role: "assistant", content: fullText });
+        return;
+      }
+
       const messages = [
         ...chatHistory,
         { role: "user", content: text }
@@ -2847,8 +2974,8 @@ function initAiCoDirector() {
   function appendMsg(role, text) {
     const row = document.createElement("div");
     row.className = `d-msg-row ${role}`;
-    const avatarClass = role === "user" ? "user" : (activeModel.includes("qwen") ? "qwen" : "deepseek");
-    const avatarIcon = role === "user" ? "👤" : (activeModel.includes("qwen") ? "💻" : "🧠");
+    const avatarClass = role === "user" ? "user" : (activeModel === "gemini" ? "gemini" : activeModel.includes("qwen") ? "qwen" : "deepseek");
+    const avatarIcon = role === "user" ? "👤" : (activeModel === "gemini" ? "✨" : activeModel.includes("qwen") ? "💻" : "🧠");
 
     row.innerHTML = `
       <div class="d-msg-avatar ${avatarClass}">${avatarIcon}</div>

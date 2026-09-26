@@ -97,6 +97,24 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
     throw new Error(`Episode directory not found: ${epDir}`);
   }
 
+  const progressFile = path.join(epDir, "render_progress.json");
+  const updateProgress = (progress, step, extra = {}) => {
+    try {
+      const data = {
+        episodeId,
+        styleId,
+        status: progress >= 100 ? "completed" : "rendering",
+        progress: Math.min(100, Math.max(0, Math.round(progress))),
+        step,
+        updatedAt: new Date().toISOString(),
+        ...extra
+      };
+      fs.writeFileSync(progressFile, JSON.stringify(data, null, 2), "utf8");
+    } catch {}
+  };
+
+  updateProgress(5, "Initializing video render pipeline and hardware encoder...");
+
   const selectedStyle = styleManager.getStyle(styleId);
   const colorGradeFilter = styleManager.getFFmpegColorGradeFilter(styleId);
 
@@ -110,6 +128,8 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   console.log(`    Theme:   ${selectedStyle.name} (${selectedStyle.colorGrade.tone})`);
   console.log(`    Engine:  FFmpeg (${encoder.name} hardware acceleration)`);
   console.log("=======================================================\n");
+
+  updateProgress(10, "Resolving master audio track and speech sync...");
 
   // 1. Locate Audio Master in this episode's directory
   const audioCandidates = [
@@ -133,16 +153,34 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
     if (mp3s.length > 0) audioFile = path.join(audioDir, mp3s[0]);
   }
 
-  // Cross-project fallback only if nothing in this episode
+  // Cross-project fallback across workspace
   if (!audioFile) {
     const fallbackCandidates = [
-      path.join(ROOT_DIR, "projects", "crime_chronicles", "episodes", "EP001", "audio", "ep001_mixed_master.mp3")
+      path.join(ROOT_DIR, "projects", "deep_investigative_dossier", "episodes", "EP001", "audio", "ep001_mixed_master.mp3"),
+      path.join(ROOT_DIR, "projects", "crime_chronicles", "episodes", "EP001", "audio", "ep001_mixed_master.mp3"),
+      path.join(ROOT_DIR, "projects", "ranks_pov_syndicate", "episodes", "EP001", "audio", "ep001_mixed_master.mp3"),
+      path.join(ROOT_DIR, "episodes", "EP001", "audio", "ep001_mixed_master.mp3")
     ];
     for (const c of fallbackCandidates) {
       if (fs.existsSync(c)) {
         audioFile = c;
         break;
       }
+    }
+  }
+
+  // Synthesize ambient suspense tone bed if no audio file exists anywhere
+  if (!audioFile) {
+    console.log("No audio file found on disk. Synthesizing ambient audio bed with FFmpeg...");
+    const synthesizedAudio = path.join(audioDir, `${episodeId.toLowerCase()}_ambient_bed.mp3`);
+    if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
+    try {
+      execSync(`"${ffmpeg}" -y -f lavfi -i "sine=f=65:d=120,volume=0.2,lowpass=f=250" -c:a aac -b:a 192k "${synthesizedAudio}"`, { stdio: "pipe" });
+      if (fs.existsSync(synthesizedAudio)) {
+        audioFile = synthesizedAudio;
+      }
+    } catch (e) {
+      console.warn("Could not synthesize fallback audio:", e.message);
     }
   }
 
@@ -165,7 +203,9 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
     path.join(projDir, "channel_assets", "style", "master_style_reference_16x9.jpg"),
     path.join(epDir, "channel_assets", "style", "master_style_reference_16x9.jpg"),
     path.join(ROOT_DIR, "channel_assets", "style", "master_style_reference_16x9.jpg"),
-    path.join(ROOT_DIR, "projects", "crime_chronicles", "channel_assets", "style", "master_style_reference_16x9.jpg")
+    path.join(ROOT_DIR, "projects", "crime_chronicles", "channel_assets", "style", "master_style_reference_16x9.jpg"),
+    path.join(ROOT_DIR, "projects", "deep_investigative_dossier", "channel_assets", "style", "master_style_reference_16x9.jpg"),
+    path.join(ROOT_DIR, "projects", "ranks_pov_syndicate", "channel_assets", "style", "master_style_reference_16x9.jpg")
   ].find(f => fs.existsSync(f));
 
   const chunkGroups = {};
@@ -253,6 +293,8 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
 
   console.log(`[2/5] Synchronized Shot Plan: ${plannedShots.length} clips calculated (Total: ${calculatedTotalDur.toFixed(2)}s).`);
 
+  updateProgress(20, `Planned ${plannedShots.length} visual shots synchronized to audio timing...`);
+
   // 3. Prepare Subtitles
   const subtitlesAss = path.join(epDir, "subtitles_karaoke.ass");
   const subtitlesSrt = path.join(epDir, "subtitles_karaoke.srt");
@@ -282,6 +324,10 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
 
   const BATCH_SIZE = 2;
   for (let i = 0; i < plannedShots.length; i += BATCH_SIZE) {
+    const currentProcessed = Math.min(i + BATCH_SIZE, plannedShots.length);
+    const progressPct = 25 + Math.round((currentProcessed / plannedShots.length) * 50);
+    updateProgress(progressPct, `Color-grading and encoding shots (${currentProcessed}/${plannedShots.length})...`);
+
     const batch = plannedShots.slice(i, i + BATCH_SIZE);
     const promises = batch.map((shot, idx) => {
       const shotIndex = i + idx;
@@ -338,6 +384,7 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   const finalOutputPath = path.join(epDir, `${episodeId}_FINAL_VIDEO_1080P.mp4`);
   console.log(`\n[5/5] Assembling final master video with audio & subtitles...`);
   console.log(`  Destination: ${finalOutputPath}`);
+  updateProgress(80, "Multiplexing video, audio master, and hard-burning karaoke subtitles...");
 
   const subPathEscaped = subFile ? subFile.replace(/\\/g, "/").replace(/:/g, "\\:") : null;
   const finalVf = subPathEscaped ? `subtitles='${subPathEscaped}'` : null;
@@ -382,6 +429,16 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(1);
   const elapsedMin = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
 
+  updateProgress(100, "1080p Master Video rendered successfully!", {
+    finalVideo: {
+      name: path.basename(finalOutputPath),
+      path: `/media/${episodeId}/${path.basename(finalOutputPath)}`,
+      sizeMb,
+      sizeBytes: stats.size,
+      durationSec: totalDuration
+    }
+  });
+
   console.log("\n=======================================================");
   console.log(`✅  SUCCESS! MULTI-STYLE 1080P MASTER VIDEO CREATED!`);
   console.log(`    File:     ${finalOutputPath}`);
@@ -400,6 +457,18 @@ if (require.main === module) {
   const projectDirArg = process.argv[4] || null;
   renderEpisode(episodeArg, styleArg, projectDirArg).catch(err => {
     console.error("\n❌ RENDER ERROR:", err.message);
+    const projectManager = require("../projects/project_manager");
+    try {
+      const epDir = projectManager.resolveEpisodeDir(episodeArg, projectDirArg);
+      fs.writeFileSync(path.join(epDir, "render_progress.json"), JSON.stringify({
+        episodeId: episodeArg,
+        status: "failed",
+        progress: 0,
+        step: `Render failed: ${err.message}`,
+        error: err.message,
+        updatedAt: new Date().toISOString()
+      }, null, 2), "utf8");
+    } catch {}
     process.exit(1);
   });
 }

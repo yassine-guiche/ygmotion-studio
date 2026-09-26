@@ -21,6 +21,7 @@ const youtubeChannelAnalyzer = require("../engine/scrapers/youtube_channel_analy
 const scriptGenerator = require("../engine/ai/script_generator");
 const voiceDesigner = require("../engine/audio/voice_designer");
 const motionEngine = require("../engine/motion/motion_engine");
+const geminiEngine = require("../engine/ai/gemini_engine");
 
 const calliopeBridge = new CalliopeBridge();
 
@@ -214,6 +215,40 @@ const server = http.createServer(async (req, res) => {
   }
 
   const paths = getActivePaths();
+
+  // --- GOOGLE GEMINI CLOUD AI ENDPOINTS ---
+  if (pathname === "/api/ai/gemini/status" && req.method === "GET") {
+    try {
+      const status = await geminiEngine.getStatus();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify(status));
+    } catch (err) {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ online: false, error: err.message }));
+    }
+  }
+
+  if (pathname === "/api/ai/gemini/chat" && req.method === "POST") {
+    let body = "";
+    req.on("data", c => { body += c; });
+    req.on("end", async () => {
+      try {
+        const { message, history } = JSON.parse(body || "{}");
+        const reply = await geminiEngine.chat({
+          message,
+          history,
+          currentProject: paths.active,
+          activeEpisode: "EP001"
+        });
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ success: true, reply }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
 
   // --- OLLAMA LOCAL AI STUDIO ENDPOINTS ---
   if (pathname === "/api/ai/ollama/status" && req.method === "GET") {
@@ -601,6 +636,24 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify({ episodes }));
   }
 
+  // API: Create Episode
+  if (pathname === "/api/episode/create" && req.method === "POST") {
+    let body = "";
+    req.on("data", c => { body += c; });
+    req.on("end", () => {
+      try {
+        const { episodeId, title, styleId } = JSON.parse(body || "{}");
+        const newEp = projectManager.createEpisode(episodeId || "EP002", title, styleId, paths.projectDir);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ success: true, episode: newEp }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // API: Episode Detail
   if (pathname.startsWith("/api/episode/") && !pathname.endsWith("/files") && req.method === "GET") {
     const epId = pathname.slice("/api/episode/".length);
@@ -825,7 +878,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // API: Trigger Video Render (supports styleId)
+  // API: Trigger Video Render (supports styleId with real-time log tracking)
   if (pathname === "/api/render" && req.method === "POST") {
     let body = "";
     req.on("data", c => { body += c; });
@@ -834,22 +887,77 @@ const server = http.createServer(async (req, res) => {
         const { episodeId, styleId } = JSON.parse(body || "{}");
         const targetId = episodeId || "EP001";
         const targetStyle = styleId || paths.active.category || "crime_suspense";
-        
+        const epDir = path.join(paths.episodesDir, targetId);
+        if (!fs.existsSync(epDir)) fs.mkdirSync(epDir, { recursive: true });
+
+        const logFile = path.join(epDir, "render.log");
+        const logStream = fs.createWriteStream(logFile, { flags: "w" });
+
+        const progressFile = path.join(epDir, "render_progress.json");
+        fs.writeFileSync(progressFile, JSON.stringify({
+          episodeId: targetId,
+          styleId: targetStyle,
+          status: "rendering",
+          progress: 5,
+          step: "Starting 1080p video render pipeline...",
+          startedAt: new Date().toISOString()
+        }, null, 2), "utf8");
+
         const renderProc = spawn("node", ["engine/scripts/render_video.js", targetId, targetStyle, paths.projectDir], {
           cwd: ROOT_DIR,
-          detached: true,
-          stdio: "ignore"
+          detached: true
         });
+
+        if (renderProc.stdout) renderProc.stdout.pipe(logStream);
+        if (renderProc.stderr) renderProc.stderr.pipe(logStream);
+
+        renderProc.on("close", (code) => {
+          try { logStream.end(); } catch {}
+          if (code !== 0) {
+            try {
+              fs.writeFileSync(progressFile, JSON.stringify({
+                episodeId: targetId,
+                styleId: targetStyle,
+                status: "failed",
+                progress: 0,
+                step: `Render process exited with code ${code}`,
+                error: `Render failed with code ${code}`,
+                updatedAt: new Date().toISOString()
+              }, null, 2), "utf8");
+            } catch {}
+          }
+        });
+
         renderProc.unref();
 
         res.writeHead(200, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ success: true, message: `Render started for ${targetId} with style ${targetStyle}` }));
+        return res.end(JSON.stringify({
+          success: true,
+          message: `Render started for ${targetId} with style ${targetStyle}`,
+          logUrl: `/media/${targetId}/render.log`
+        }));
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: err.message }));
       }
     });
     return;
+  }
+
+  // API: Get Real-Time Render Progress Status
+  if (pathname === "/api/render/status" && req.method === "GET") {
+    const epId = url.searchParams.get("episodeId") || "EP001";
+    const epDir = path.join(paths.episodesDir, epId);
+    const progressFile = path.join(epDir, "render_progress.json");
+    if (fs.existsSync(progressFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(progressFile, "utf8"));
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify(data));
+      } catch {}
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ status: "idle", progress: 0 }));
   }
 
   // API: Calliope Studio Integration
@@ -1125,12 +1233,54 @@ const server = http.createServer(async (req, res) => {
         }
         if (scriptText) {
           fs.writeFileSync(path.join(epDir, "script_master.md"), scriptText, "utf8");
+        } else if (scriptData) {
+          try {
+            const md = scriptGenerator.formatToScriptMasterMd(scriptData);
+            fs.writeFileSync(path.join(epDir, "script_master.md"), md, "utf8");
+          } catch {}
         }
+
         if (scriptData) {
           fs.writeFileSync(path.join(epDir, "script_data.json"), JSON.stringify(scriptData, null, 2), "utf8");
+
+          // Automatically synchronize footage_manifest.json with the generated scene script
+          if (scriptData.scenes && scriptData.scenes.length > 0) {
+            const manifestPath = path.join(epDir, "footage_manifest.json");
+            let existingShots = [];
+            if (fs.existsSync(manifestPath)) {
+              try {
+                const ex = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+                existingShots = ex.shots || [];
+              } catch {}
+            }
+
+            const synchronizedShots = scriptData.scenes.map((s, idx) => {
+              const prevShot = existingShots[idx] || {};
+              return {
+                shotId: `shot_${String(idx + 1).padStart(3, "0")}`,
+                partId: s.partIndex || (idx + 1),
+                title: s.title || `Part ${idx + 1}`,
+                text: s.text,
+                visualPrompt: s.visualPrompt || s.text,
+                motionType: s.cameraMotion || prevShot.motionType || "push_in",
+                durationSec: s.estimatedDurationSec || prevShot.durationSec || 5.0,
+                audio: `chunk_part_${String(idx + 1).padStart(2, "0")}.mp3`,
+                visualType: prevShot.visualType || "ai_scene",
+                characterId: prevShot.characterId || null,
+                file: prevShot.file || `motion_shot_${String(idx + 1).padStart(3, "0")}.mp4`
+              };
+            });
+
+            fs.writeFileSync(manifestPath, JSON.stringify({
+              episodeId: episodeId || "EP001",
+              updatedAt: new Date().toISOString(),
+              shots: synchronizedShots
+            }, null, 2), "utf8");
+          }
         }
+
         res.writeHead(200, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ success: true, message: "Script locked and saved." }));
+        return res.end(JSON.stringify({ success: true, message: "Script locked and manifest synchronized." }));
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: err.message }));

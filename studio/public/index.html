@@ -109,6 +109,12 @@
           <span>New Episode</span>
         </button>
 
+        <!-- Google Gemini Cloud AI Status -->
+        <div class="nav-vram-card" id="ygmotionGeminiCard" title="Google Gemini Cloud AI Engine" style="border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.08); display: flex; align-items: center; gap: 8px;">
+          <span class="vram-dot active" id="ygmotionGeminiDot" style="background: #3b82f6; box-shadow: 0 0 8px #3b82f6;"></span>
+          <span class="vram-text" id="ygmotionGeminiText" style="color: #60a5fa; font-weight: 700;">Gemini Cloud</span>
+        </div>
+
         <!-- Ollama Local GPU Telemetry & Eject -->
         <div class="nav-vram-card" id="ygmotionVramCard" title="Local RTX 4060 GPU Telemetry">
           <span class="vram-dot" id="ygmotionVramDot"></span>
@@ -1452,6 +1458,7 @@
       </div>
 
       <div class="drawer-model-toggle">
+        <button class="d-model-btn active-gemini" id="drawerTabGemini" data-model="gemini" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">✨ Gemini Cloud</button>
         <button class="d-model-btn active-qwen" id="drawerTabQwen" data-model="qwen2.5-coder:7b">💻 Qwen 2.5</button>
         <button class="d-model-btn" id="drawerTabDeepseek" data-model="deepseek-r1:8b">🧠 DeepSeek R1</button>
       </div>

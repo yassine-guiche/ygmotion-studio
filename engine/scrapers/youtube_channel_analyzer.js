@@ -51,6 +51,67 @@ function scrapeYouTubeChannel(urlOrHandle) {
 }
 
 /**
+ * Query Google Gemini Cloud AI for high-speed, intelligent channel niche decoding
+ */
+async function queryGeminiAnalysis(channelTitle, channelDesc, topVideos) {
+  try {
+    const geminiEngine = require('../ai/gemini_engine');
+    if (!geminiEngine.isAvailable()) return null;
+
+    const titlesList = topVideos.slice(0, 10).map((v, i) => `${i + 1}. ${v.title} (${v.views || 'popular'})`).join('\n');
+    const prompt = `You are a world-class YouTube content strategist and viral media analyst.
+Analyze this creator's channel and recent video library:
+Channel Name: ${channelTitle}
+Description: ${channelDesc}
+Top Videos:
+${titlesList}
+
+Determine the channel's true niche, hook formula, visual style, and generate 4 high-CTR viral episode concepts matching this creator's exact style.
+Respond ONLY with a valid JSON object with this exact schema:
+{
+  "archetype": "crime_suspense" | "visual_documentary" | "ranks_pov" | "stickman_animation",
+  "archetypeName": "Display name of genre (e.g. True Crime & Police Bodycam Stories)",
+  "narratorMode": "voiceover_only" | "pov_hands_hud" | "stick_avatar",
+  "visualPipeline": "realistic_cinematic" | "archival_documentary" | "cyber_pov" | "stickman_2d",
+  "defaultStyleId": "crime_suspense" | "visual_documentary" | "ranks_pov" | "stickman_animation",
+  "hookFormula": "Exact formula used to hook viewers in first 10 seconds",
+  "retentionMechanic": "Psychological tension, chronological escalation, or pacing strategy",
+  "pacingWpm": 160,
+  "motionRecommendation": "Camera motion recommendation (e.g. 2.5D Noir Push-In & Bodycam)",
+  "suggestedVoice": {
+    "presetId": "JAKE_EP01_MASTER" | "DOC_NARRATOR_CALM" | "POV_OPERATOR_V1" | "STICKMAN_HERO",
+    "recommendedGender": "Male (Deep Noir)" | "Male / Neutral",
+    "tone": "Exact tone descriptor",
+    "targetWpm": 160
+  },
+  "viralTopics": [
+    {
+      "title": "Viral Click-Worthy Title",
+      "hook": "Opening 15-second narration hook",
+      "tiers": ["Part 1", "Part 2", "Part 3", "Part 4"]
+    }
+  ]
+}`;
+
+    const res = await geminiEngine.generateContent(prompt, { jsonMode: true, temperature: 0.3 });
+    if (!res || !res.text) return null;
+    let rawText = res.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const jsonStart = rawText.indexOf('{');
+    const jsonEnd = rawText.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      const parsed = JSON.parse(rawText.slice(jsonStart, jsonEnd + 1));
+      if (parsed.archetype && parsed.viralTopics && parsed.viralTopics.length >= 2) {
+        return parsed;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn("Gemini channel analysis fallback:", err.message);
+    return null;
+  }
+}
+
+/**
  * Query local Ollama (qwen2.5-coder:7b) for real intelligent niche decoding
  */
 function queryOllamaAnalysis(channelTitle, channelDesc, topVideos) {
@@ -205,8 +266,14 @@ async function analyzeChannelNiche(urlOrHandle) {
   const videos = rawData.videos || [];
   const topVideos = videos.slice(0, 15);
 
-  // 1. Try local Ollama AI first for deep, intelligent understanding
-  const aiInsights = await queryOllamaAnalysis(rawData.channelTitle, rawData.channelDesc, topVideos);
+  // 1. Try Google Gemini Cloud AI first for blazing fast, elite channel understanding
+  let aiInsights = await queryGeminiAnalysis(rawData.channelTitle, rawData.channelDesc, topVideos);
+
+  // 2. Try local Ollama AI as secondary fallback
+  if (!aiInsights || !aiInsights.viralTopics || aiInsights.viralTopics.length < 2) {
+    aiInsights = await queryOllamaAnalysis(rawData.channelTitle, rawData.channelDesc, topVideos);
+  }
+
   if (aiInsights && aiInsights.viralTopics && aiInsights.viralTopics.length >= 2) {
     return {
       channelTitle: rawData.channelTitle,

@@ -20,15 +20,33 @@ class ScriptGenerator {
     const title = typeof topic === 'string' ? topic : topic?.title || "Untold Story";
 
     let scenes = [];
+    let generatedBy = "template";
 
-    // 1. Try local Ollama LLM for bespoke AI scriptwriting first
+    // 1. Try Google Gemini Cloud AI for high-speed master storytelling first
     try {
-      const aiScenes = await this._queryOllamaScript(title, topic, archetype, pacingWpm);
-      if (aiScenes && aiScenes.length >= 4) {
-        scenes = aiScenes;
+      const geminiEngine = require("./gemini_engine");
+      if (geminiEngine.isAvailable()) {
+        const geminiRes = await geminiEngine.generateScript({ blueprint, topic, pacingWpm, targetDurationMin });
+        if (geminiRes && geminiRes.scenes && geminiRes.scenes.length >= 4) {
+          scenes = geminiRes.scenes;
+          generatedBy = geminiRes.generatedBy || "google_gemini";
+        }
       }
     } catch (e) {
-      console.warn("Ollama script generation fallback to template:", e.message);
+      console.warn("Gemini script generation fallback:", e.message);
+    }
+
+    // 2. Try local Ollama LLM for local GPU AI scriptwriting fallback
+    if (!scenes || scenes.length === 0) {
+      try {
+        const aiScenes = await this._queryOllamaScript(title, topic, archetype, pacingWpm);
+        if (aiScenes && aiScenes.length >= 4) {
+          scenes = aiScenes;
+          generatedBy = "ollama (qwen2.5-coder:7b)";
+        }
+      } catch (e) {
+        console.warn("Ollama script generation fallback to template:", e.message);
+      }
     }
 
     // 2. High-Fidelity Archetype Script Generators Fallback
@@ -53,7 +71,8 @@ class ScriptGenerator {
       pacingWpm,
       totalWords,
       estimatedDurationSec: totalDurationSec,
-      scenes
+      scenes,
+      generatedBy
     };
   }
 
