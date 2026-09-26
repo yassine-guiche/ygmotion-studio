@@ -1567,7 +1567,6 @@ const confirmDeleteProjectBtn = document.getElementById("confirmDeleteProjectBtn
 const deleteProjectId = document.getElementById("deleteProjectId");
 const deleteProjectTargetName = document.getElementById("deleteProjectTargetName");
 
-const launcherOpenFolderBtn = document.getElementById("launcherOpenFolderBtn");
 const openFolderModal = document.getElementById("openFolderModal");
 const closeOpenFolderModalBtn = document.getElementById("closeOpenFolderModalBtn");
 const cancelOpenFolderModalBtn = document.getElementById("cancelOpenFolderModalBtn");
