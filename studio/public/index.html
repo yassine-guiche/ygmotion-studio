@@ -199,15 +199,22 @@
         
         <!-- Cinema Stage -->
         <div class="cinema-stage">
-          <div class="stage-header">
-            <div class="episode-meta">
+          <div class="stage-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div class="episode-meta" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <span class="badge episode-tag" id="currentEpTag">EP001</span>
-              <h1 class="episode-title" id="currentEpTitle">The Cop Was About to Search My Car</h1>
+              <select id="episodeSelect" class="episode-select" title="Switch Episode" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 240, 255, 0.5); color: #fff; font-weight: 700; border-radius: 8px; padding: 6px 14px; font-size: 0.9rem; cursor: pointer; max-width: 320px; box-shadow: 0 0 12px rgba(0, 240, 255, 0.15); outline: none;">
+                <option value="EP001">EP001 — Loading...</option>
+              </select>
+              <h1 class="episode-title" id="currentEpTitle" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #f8fafc;">Episode Title</h1>
             </div>
-            <div class="quality-badges">
+            <div class="quality-badges" style="display: flex; align-items: center; gap: 8px;">
               <span class="tech-tag" id="activeStyleBadge">🕵️ TRUE CRIME</span>
-              <span class="tech-tag">1080P HD</span>
+              <span class="tech-tag" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399;">1080P HD</span>
               <span class="tech-tag highlight">SYNCHRONIZED KARAOKE</span>
+              <a id="downloadVideoDirectBtn" href="#" download class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; font-size: 0.8rem; background: rgba(255,255,255,0.06); border-radius: 6px; text-decoration: none; color: #fff; font-weight: 600; border: 1px solid rgba(255,255,255,0.15);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Download MP4</span>
+              </a>
             </div>
           </div>
 

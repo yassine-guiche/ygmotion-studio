@@ -354,6 +354,7 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
       } else {
         args = [
           "-y",
+          "-stream_loop", "-1",
           "-ss", "0",
           "-t", shot.targetDurationSec.toFixed(3),
           "-i", inputPath,

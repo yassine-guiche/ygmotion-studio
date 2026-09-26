@@ -5,8 +5,9 @@
 
 "use strict";
 
-let currentEpisode = "EP001";
-let currentEpisodeId = "EP001";
+const urlParams = new URLSearchParams(window.location.search);
+let currentEpisode = urlParams.get("episode") ? urlParams.get("episode").toUpperCase() : "EP001";
+let currentEpisodeId = currentEpisode;
 let currentStyle = "crime_suspense";
 let episodeData = null;
 let allStyles = {};
@@ -175,10 +176,27 @@ async function loadEpisodes() {
       eps.forEach(ep => {
         const opt = document.createElement("option");
         opt.value = ep.id;
-        opt.textContent = `${ep.id} — ${ep.title}`;
+        const videoTag = ep.finalVideo ? "✓ 1080p" : "⚙️";
+        opt.textContent = `${ep.id} — ${ep.title || "Episode"} [${videoTag}]`;
         if (ep.id === currentEpisode) opt.selected = true;
         sel.appendChild(opt);
       });
+
+      // If currentEpisode isn't in list, select the last one (newest) or first
+      const exists = eps.some(e => e.id === currentEpisode);
+      if (!exists && eps.length > 0) {
+        currentEpisode = eps[eps.length - 1].id;
+        currentEpisodeId = currentEpisode;
+        sel.value = currentEpisode;
+      }
+
+      sel.onchange = (e) => {
+        const targetId = e.target.value;
+        loadEpisode(targetId);
+        const url = new URL(window.location);
+        url.searchParams.set("episode", targetId);
+        window.history.pushState({}, "", url);
+      };
     }
   } catch (err) {
     console.error("Error loading episodes:", err);
@@ -192,20 +210,37 @@ async function loadEpisode(epId = "EP001") {
     if (!res.ok) throw new Error("Failed to fetch episode data");
     episodeData = await res.json();
     currentEpisode = epId;
+    currentEpisodeId = epId;
 
-    document.getElementById("currentEpTag").textContent = epId;
-    document.getElementById("currentEpTitle").textContent = episodeData.title || epId;
+    const sel = document.getElementById("episodeSelect");
+    if (sel && sel.value !== epId) sel.value = epId;
+
+    const epTag = document.getElementById("currentEpTag");
+    if (epTag) epTag.textContent = epId;
+
+    const epTitle = document.getElementById("currentEpTitle");
+    if (epTitle) epTitle.textContent = episodeData.title || epId;
+
+    const dlDirect = document.getElementById("downloadVideoDirectBtn");
 
     if (episodeData.finalVideo) {
       videoSource.src = episodeData.finalVideo.path;
       masterVideo.load();
-      downloadVideoBtn.href = episodeData.finalVideo.path;
-      videoSizeLabel.textContent = `1080p MP4 (${episodeData.finalVideo.sizeMb} MB)`;
-      document.getElementById("renderStatusText").textContent = `1080p MP4 ready (${episodeData.finalVideo.sizeMb} MB)`;
-      renderBanner.style.display = "none";
+      if (downloadVideoBtn) downloadVideoBtn.href = episodeData.finalVideo.path;
+      if (dlDirect) {
+        dlDirect.href = episodeData.finalVideo.path;
+        dlDirect.style.display = "inline-flex";
+        dlDirect.setAttribute("download", `${epId}_FINAL_VIDEO_1080P.mp4`);
+      }
+      if (videoSizeLabel) videoSizeLabel.textContent = `1080p MP4 (${episodeData.finalVideo.sizeMb} MB)`;
+      const rText = document.getElementById("renderStatusText");
+      if (rText) rText.textContent = `1080p MP4 ready (${episodeData.finalVideo.sizeMb} MB)`;
+      if (renderBanner) renderBanner.style.display = "none";
     } else {
-      renderBanner.style.display = "flex";
-      document.getElementById("renderStatusText").textContent = "Rendering in background...";
+      if (renderBanner) renderBanner.style.display = "flex";
+      const rText = document.getElementById("renderStatusText");
+      if (rText) rText.textContent = "Rendering in background...";
+      if (dlDirect) dlDirect.style.display = "none";
     }
 
     if (scriptContent) {
@@ -322,27 +357,32 @@ function renderShots(shots) {
       shotMarkers.appendChild(tick);
     }
 
-    const card = document.createElement("div");
-    card.className = "shot-card";
-    card.id = `shot-card-${shot.shotId}`;
-    const charTag = shot.characterId ? `<span class="shot-char-tag">🎭 ${shot.characterId.replace(/_/g, ' ').toUpperCase()}</span>` : '';
-    const motionBadge = shot.motion || '🎥 2.5D Motion';
+    const isPexels = shot.visualType === "pexels_stock_video" || (shot.file && shot.file.endsWith('.mp4'));
+    const motionBadgeHtml = isPexels 
+      ? `<span class="shot-motion-tag" style="background: rgba(16, 185, 129, 0.9); color: #fff; font-weight: 700;">⚡ Pexels HD</span>` 
+      : `<span class="shot-motion-tag">${motionBadge}</span>`;
+    const queryTagHtml = shot.pexelsQuery 
+      ? `<div class="shot-query-tag" style="font-size: 0.72rem; color: #38bdf8; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-top: 3px;"><span>🔍</span><span>${shot.pexelsQuery}</span></div>` 
+      : '';
     const fallbackImg = `/channel_assets/style/master_style_reference_16x9.jpg`;
     const thumbUrl = shot.thumbnailUrl || fallbackImg;
 
     card.innerHTML = `
       <div class="shot-thumb-wrapper">
-        <img src="${thumbUrl}" alt="${shot.shotId}" class="shot-thumb-img" onerror="this.src='${fallbackImg}'">
-        ${shot.videoUrl ? `<video src="${shot.videoUrl}#t=1" class="shot-video-preview" preload="metadata" muted playsinline></video>` : ''}
+        ${shot.videoUrl 
+          ? `<video src="${shot.videoUrl}#t=0.5" class="shot-video-preview" preload="metadata" muted playsinline loop style="width: 100%; height: 100%; object-fit: cover;"></video>`
+          : `<img src="${thumbUrl}" alt="${shot.shotId}" class="shot-thumb-img" onerror="this.src='${fallbackImg}'">`
+        }
         <span class="shot-badge">${shot.shotId}</span>
         <span class="shot-duration">${formatTime(startTime)} – ${formatTime(endTime)}</span>
-        <span class="shot-motion-tag">${motionBadge}</span>
+        ${motionBadgeHtml}
         <button class="edit-shot-btn" data-shotid="${shot.shotId}" title="Director Mode: Cast Character & Edit Prompt">Direct 🎬</button>
       </div>
       <div class="shot-info-box">
         <div class="shot-prompt-title" title="${shot.visualPrompt || shot.text || shot.shotId}">
           ${charTag} ${shot.visualPrompt || shot.text || 'Cinematic narrative scene'}
         </div>
+        ${queryTagHtml}
         <div class="shot-script-snippet" title="${shot.text || ''}">
           💬 "${(shot.text || '').slice(0, 85)}${(shot.text || '').length > 85 ? '...' : ''}"
         </div>
@@ -369,8 +409,10 @@ function renderShots(shots) {
         cardVideo.play().catch(() => {});
       });
       card.addEventListener("mouseleave", () => {
-        cardVideo.pause();
-        cardVideo.currentTime = 1;
+        try {
+          cardVideo.pause();
+          cardVideo.currentTime = 0.5;
+        } catch {}
       });
     }
 
@@ -2812,13 +2854,17 @@ if (startAutoProducerBtn) {
     await loadCalliopeStatus();
     await loadCharacters();
     await loadEpisodes();
-    await loadEpisode("EP001");
+    await loadEpisode(currentEpisode || "EP001");
   } catch (e) {
     console.warn("[YGMotion init] Non-critical init error:", e);
   }
   
-  // Option B: Show Project Launcher as Home Screen
-  showLauncher();
+  // If URL explicitly requests a project or episode, show Studio Editor immediately
+  if (urlParams.get("project") || urlParams.get("episode")) {
+    showEditor();
+  } else {
+    showLauncher();
+  }
 })();
 
 // Initialize AI Co-Director & Local GPU Telemetry (always runs, independent of init chain)
