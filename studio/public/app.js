@@ -2734,6 +2734,7 @@ const cancelAutoProducerBtn = document.getElementById("cancelAutoProducerBtn");
 const startAutoProducerBtn = document.getElementById("startAutoProducerBtn");
 const autoProducerTitleInput = document.getElementById("autoProducerTitleInput");
 const autoProducerStyleSelect = document.getElementById("autoProducerStyleSelect");
+const autoProducerAiModel = document.getElementById("autoProducerAiModel");
 const autoProducerVisualMode = document.getElementById("autoProducerVisualMode");
 const autoProducerExpandBtn = document.getElementById("autoProducerExpandBtn");
 const aiExpandedBox = document.getElementById("aiExpandedBox");
@@ -2787,15 +2788,16 @@ if (autoProducerExpandBtn) {
       return;
     }
 
+    const selectedModel = autoProducerAiModel ? autoProducerAiModel.value : "deepseek";
     autoProducerExpandBtn.disabled = true;
-    autoProducerExpandBtn.innerHTML = `<span>✨ Expanding...</span>`;
+    autoProducerExpandBtn.innerHTML = `<span>✨ Expanding (${selectedModel})...</span>`;
     const styleId = autoProducerStyleSelect ? autoProducerStyleSelect.value : "crime_suspense";
 
     try {
       const res = await fetch("/api/ai/expand-idea", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: rawIdea, styleId })
+        body: JSON.stringify({ idea: rawIdea, styleId, aiModel: selectedModel })
       });
       const data = await res.json();
       if (data.titles && data.titles.length > 0) {
@@ -2841,19 +2843,20 @@ if (startAutoProducerBtn) {
 
     const styleId = autoProducerStyleSelect ? autoProducerStyleSelect.value : (currentProject?.category || "crime_suspense");
     const visualMode = autoProducerVisualMode ? autoProducerVisualMode.value : "hybrid";
+    const aiModel = autoProducerAiModel ? autoProducerAiModel.value : "consensus";
 
     startAutoProducerBtn.disabled = true;
     startAutoProducerBtn.innerHTML = `<span>Producing Video... 🎬</span>`;
     if (autoProducerProgressCard) autoProducerProgressCard.style.display = "block";
     if (autoProducerProgressBar) autoProducerProgressBar.style.width = "5%";
     if (autoProducerPctLabel) autoProducerPctLabel.textContent = "5%";
-    if (autoProducerStepLabel) autoProducerStepLabel.textContent = `Starting automated production (${visualMode.toUpperCase()})...`;
+    if (autoProducerStepLabel) autoProducerStepLabel.textContent = `Starting [${aiModel.toUpperCase()}] production (${visualMode.toUpperCase()})...`;
 
     try {
       const res = await fetch("/api/pipeline/auto-produce", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, styleId, visualMode })
+        body: JSON.stringify({ title, styleId, visualMode, aiModel })
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Failed to start automated producer");

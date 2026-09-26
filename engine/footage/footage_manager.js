@@ -14,6 +14,7 @@ const fs = require("fs");
 const path = require("path");
 const motionEngine = require("../motion/motion_engine");
 const visualGenerator = require("../ai/visual_generator");
+const geminiMediaEngine = require("../ai/gemini_media_engine");
 
 function getPexelsApiKey() {
   const envPaths = [
@@ -264,11 +265,32 @@ class FootageManager {
       queriesToTry.push("cinematic atmosphere", "dramatic lighting");
 
       // Check whether this shot should prefer video or photo based on visualMode
-      // In hybrid mode: alternate or pick photo for character dialogue and video for action
-      const preferPhoto = visualMode === "photo" || (visualMode === "hybrid" && (shotIndex % 2 === 1 && !scene.pexelsQuery?.includes("action")));
+      const preferPhoto = visualMode === "photo" || visualMode === "gemini_image" || (visualMode === "hybrid" && (shotIndex % 2 === 1 && !scene.pexelsQuery?.includes("action")));
+
+      // 0. If visualMode is "veo_video", try Google Veo 3.1 AI Video Generation first
+      if (visualMode === "veo_video") {
+        try {
+          if (onProgress) onProgress(shotIndex, scenes.length, `Generating Veo 3.1 video for Scene ${shotIndex}...`);
+          const veoPrompt = `${scene.visualPrompt || scene.text}, ${styleAnchor}`;
+          const veoResult = await geminiMediaEngine.generateVideo({
+            prompt: veoPrompt,
+            outputPath: videoFilePath,
+            durationSeconds: targetDurationSec
+          });
+          if (veoResult && veoResult.success && fs.existsSync(videoFilePath) && fs.statSync(videoFilePath).size > 50000) {
+            shotSource = {
+              file: videoFileName,
+              visualType: "google_veo_3.1",
+              sourceDetails: veoResult
+            };
+          }
+        } catch (veoErr) {
+          console.warn(`[Veo Video] Scene ${shotIndex} failed, falling back to Pexels video:`, veoErr.message);
+        }
+      }
 
       // 1. If not photo-only, try Pexels Video Search
-      if (!preferPhoto) {
+      if (!shotSource && !preferPhoto) {
         for (const q of queriesToTry) {
           try {
             const vResult = await this.downloadPexelsVideo({
@@ -290,25 +312,57 @@ class FootageManager {
         }
       }
 
-      // 2. If Pexels video failed, try Pexels Photo + 2.5D camera animation
+      // 2. If Pexels video failed or photo mode preferred, try photo + 2.5D camera animation
       if (!shotSource) {
         if (onProgress) {
           onProgress(shotIndex, scenes.length, `Applying 2.5D animation to Scene ${shotIndex}...`);
         }
 
         let photoDownloaded = false;
-        for (const q of queriesToTry) {
-          const pResult = await this.downloadPexelsPhoto({
-            query: q,
-            outputPath: stillFilePath
-          });
-          if (pResult && fs.existsSync(stillFilePath)) {
-            photoDownloaded = true;
-            break;
+
+        // If gemini_image mode is selected, generate image directly with Gemini
+        if (visualMode === "gemini_image") {
+          try {
+            if (onProgress) onProgress(shotIndex, scenes.length, `Synthesizing Gemini AI Image for Scene ${shotIndex}...`);
+            const geminiRes = await geminiMediaEngine.generateImage({
+              prompt: `${scene.visualPrompt || scene.text}, ${styleAnchor}`,
+              outputPath: stillFilePath
+            });
+            if (geminiRes && geminiRes.success && fs.existsSync(stillFilePath)) {
+              photoDownloaded = true;
+            }
+          } catch (gErr) {
+            console.warn(`[Gemini Image] Scene ${shotIndex} failed, falling back to Pexels photo:`, gErr.message);
           }
         }
 
-        // 3. If Pexels photo also failed, generate via Visual Generator (Flux / SDXL)
+        // Try Pexels Photo API if still image not yet acquired
+        if (!photoDownloaded) {
+          for (const q of queriesToTry) {
+            const pResult = await this.downloadPexelsPhoto({
+              query: q,
+              outputPath: stillFilePath
+            });
+            if (pResult && fs.existsSync(stillFilePath)) {
+              photoDownloaded = true;
+              break;
+            }
+          }
+        }
+
+        // 3. If Pexels photo failed, try Gemini Image synthesis then SDXL/Flux
+        if (!photoDownloaded) {
+          try {
+            const gRes = await geminiMediaEngine.generateImage({
+              prompt: `${scene.visualPrompt || scene.text}, ${styleAnchor}`,
+              outputPath: stillFilePath
+            });
+            if (gRes && gRes.success && fs.existsSync(stillFilePath)) {
+              photoDownloaded = true;
+            }
+          } catch (e) {}
+        }
+
         if (!photoDownloaded) {
           try {
             await visualGenerator.generateSceneImage({

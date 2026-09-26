@@ -16,6 +16,7 @@ const fs = require("fs");
 const path = require("path");
 
 const geminiEngine = require("../ai/gemini_engine");
+const triModelOrchestrator = require("../ai/tri_model_orchestrator");
 const scriptGenerator = require("../ai/script_generator");
 const visualGenerator = require("../ai/visual_generator");
 const footageManager = require("../footage/footage_manager");
@@ -46,6 +47,7 @@ class AutomatedProducer {
     episodeId = null,
     styleId = null,
     visualMode = "hybrid",
+    aiModel = "gemini",
     projectDirOverride = null,
     onProgress = null
   }) {
@@ -64,6 +66,7 @@ class AutomatedProducer {
         episodeId: targetEpId,
         styleId: finalStyleId,
         visualMode,
+        aiModel,
         status: progress >= 100 ? "completed" : "rendering",
         progress: Math.min(100, Math.max(0, Math.round(progress))),
         step,
@@ -84,9 +87,9 @@ class AutomatedProducer {
       projectManager.createEpisode(targetEpId, title, finalStyleId, projectDir);
 
       // ----------------------------------------------------
-      // STEP 2: SCRIPT GENERATION VIA GEMINI CLOUD AI
+      // STEP 2: SCRIPT GENERATION VIA AI ORCHESTRATOR
       // ----------------------------------------------------
-      report(15, `Generating high-retention script for "${title}" with Google Gemini Cloud AI...`);
+      report(15, `Generating high-retention script for "${title}" using [${aiModel.toUpperCase()}]...`);
       const blueprint = {
         nicheInsights: {
           archetype: finalStyleId,
@@ -96,14 +99,15 @@ class AutomatedProducer {
 
       let scriptData;
       try {
-        scriptData = await geminiEngine.generateScript({
+        scriptData = await triModelOrchestrator.generateScript({
           blueprint,
           topic: title,
           pacingWpm: blueprint.nicheInsights.pacingWpm,
-          targetDurationMin: 2.0
+          targetDurationMin: 2.0,
+          model: aiModel
         });
       } catch (err) {
-        console.warn("Gemini script generation fallback to generator:", err.message);
+        console.warn("TriModel script generation fallback to generator:", err.message);
         scriptData = await scriptGenerator.generateScript({
           blueprint,
           topic: title,

@@ -23,6 +23,8 @@ const voiceDesigner = require("../engine/audio/voice_designer");
 const motionEngine = require("../engine/motion/motion_engine");
 const geminiEngine = require("../engine/ai/gemini_engine");
 const automatedProducer = require("../engine/pipeline/automated_producer");
+const triModelOrchestrator = require("../engine/ai/tri_model_orchestrator");
+const geminiMediaEngine = require("../engine/ai/gemini_media_engine");
 
 const calliopeBridge = new CalliopeBridge();
 
@@ -985,19 +987,35 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify({ status: "idle", progress: 0 }));
   }
 
+  // API: Available AI Models (Tri-Model Orchestrator)
+  if (pathname === "/api/ai/models" && req.method === "GET") {
+    try {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({
+        success: true,
+        activeModels: triModelOrchestrator.getAvailableModels ? triModelOrchestrator.getAvailableModels() : [],
+        geminiMediaConfigured: geminiMediaEngine.isConfigured()
+      }));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ error: err.message }));
+    }
+  }
+
   // API: 1-Click Automated Producer (Title -> 1080p Master Video)
   if (pathname === "/api/pipeline/auto-produce" && req.method === "POST") {
     let body = "";
     req.on("data", c => { body += c; });
     req.on("end", async () => {
       try {
-        const { title, episodeId, styleId, visualMode } = JSON.parse(body || "{}");
+        const { title, episodeId, styleId, visualMode, aiModel } = JSON.parse(body || "{}");
         if (!title) {
           res.writeHead(400, { "Content-Type": "application/json" });
           return res.end(JSON.stringify({ error: "Missing required video title" }));
         }
 
         const targetEpId = episodeId || automatedProducer.getNextEpisodeId(paths.projectDir);
+        const selectedAiModel = aiModel || "consensus";
 
         // Start production pipeline asynchronously
         automatedProducer.produceVideoFromTitle({
@@ -1005,6 +1023,7 @@ const server = http.createServer(async (req, res) => {
           episodeId: targetEpId,
           styleId: styleId || paths.active?.category || "crime_suspense",
           visualMode: visualMode || "hybrid",
+          aiModel: selectedAiModel,
           projectDirOverride: paths.projectDir
         }).catch(err => {
           console.error(`[PIPELINE ASYNC ERROR] ${targetEpId}:`, err.message);
@@ -1016,7 +1035,8 @@ const server = http.createServer(async (req, res) => {
           episodeId: targetEpId,
           title,
           visualMode: visualMode || "hybrid",
-          message: `1-Click production initiated for "${title}". Track progress at /api/render/status?episodeId=${targetEpId}`
+          aiModel: selectedAiModel,
+          message: `1-Click production initiated for "${title}" using [${selectedAiModel.toUpperCase()}]. Track progress at /api/render/status?episodeId=${targetEpId}`
         }));
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });
@@ -1026,13 +1046,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // API: AI Idea to Viral Title & Visual Hook Expansion
+  // API: AI Idea to Viral Title & Visual Hook Expansion (Tri-Model Powered)
   if (pathname === "/api/ai/expand-idea" && req.method === "POST") {
     let body = "";
     req.on("data", c => { body += c; });
     req.on("end", async () => {
       try {
-        const { idea, styleId } = JSON.parse(body || "{}");
+        const { idea, styleId, aiModel } = JSON.parse(body || "{}");
         if (!idea) {
           res.writeHead(400, { "Content-Type": "application/json" });
           return res.end(JSON.stringify({ error: "Missing idea string" }));
@@ -1041,42 +1061,17 @@ const server = http.createServer(async (req, res) => {
         const chosenStyle = styleManager.getStyle(styleId || paths.active?.category || "crime_suspense");
         const styleName = chosenStyle?.name || styleId || "Cinematic Storytelling";
 
-        const prompt = `You are a viral YouTube channel strategist specializing in ${styleName}.
-User's raw idea: "${idea}"
-Style Archetype: "${chosenStyle?.id}" (${chosenStyle?.description})
-
-Return a JSON object with:
-1. "titles": Array of 4 high-CTR YouTube titles tailored for this specific niche (intriguing, high-curiosity, zero clickbait slop).
-2. "openingHook": 2 sentences of high-retention narration opening.
-3. "recommendedVisualMode": "photo" (for prehistoric/ancient/archival documentaries), "video" (for fast modern action/dashcam), or "hybrid" (for character dialogue + cinematic b-roll).
-4. "visualKeywords": Array of 4 search terms for finding high-resolution stock video or generating 2.5D visual scenes.
-Format strictly as JSON.`;
-
-        let resultJson = null;
-        try {
-          const geminiRes = await geminiEngine.generateContent(prompt, { jsonMode: true, temperature: 0.6 });
-          resultJson = JSON.parse(geminiRes.text);
-        } catch (geminiErr) {
-          console.warn("Gemini idea expansion fallback:", geminiErr.message);
-          resultJson = {
-            titles: [
-              `${idea}: The Untold Truth`,
-              `What Really Happened: ${idea}`,
-              `The Shocking Mystery of ${idea}`,
-              `How Everything Changed: ${idea}`
-            ],
-            openingHook: `Most people believe they know the story of ${idea}. But what really happened was far more unsettling.`,
-            recommendedVisualMode: styleId === "deep_epoch" ? "photo" : "hybrid",
-            visualKeywords: [idea, "cinematic atmosphere", "dramatic mystery", "dark lighting"]
-          };
-        }
+        const expansion = await triModelOrchestrator.expandIdea({
+          idea,
+          styleId: chosenStyle?.id || styleId,
+          model: aiModel || "deepseek"
+        });
 
         res.writeHead(200, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({
-          success: true,
           style: chosenStyle?.id,
           styleName,
-          ...resultJson
+          ...expansion
         }));
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });

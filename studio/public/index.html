@@ -1503,25 +1503,36 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
           <div class="form-group">
-            <label style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px; display: block; font-weight: 600;">Channel Niche Archetype:</label>
-            <select id="autoProducerStyleSelect" class="form-select" style="width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 0.85rem;">
-              <option value="deep_epoch">🦴 Deep Epoch (Prehistoric & Ancient Survival)</option>
-              <option value="tactical_what_if">🎖️ Last Brain Cell (Tactical Military 'What If')</option>
-              <option value="viral_lore_drama">🌌 2026 Serialized Myth & Cosmic Lore</option>
+            <label style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px; display: block; font-weight: 600;">Channel Archetype:</label>
+            <select id="autoProducerStyleSelect" class="form-select" style="width: 100%; padding: 10px 10px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 0.82rem;">
+              <option value="deep_epoch">🦴 Deep Epoch (Prehistoric & Ancient)</option>
+              <option value="tactical_what_if">🎖️ Last Brain Cell (Military What If)</option>
+              <option value="viral_lore_drama">🌌 Serialized Myth & Cosmic Lore</option>
               <option value="crime_suspense">🕵️ True Crime & Police Bodycam</option>
               <option value="ranks_pov">🎮 @Ranks POV Progression</option>
-              <option value="visual_documentary">📁 Magnates Deep Script Documentary</option>
+              <option value="visual_documentary">📁 Magnates Deep Script Doc</option>
               <option value="stickman_animation">✏️ Stickman 2D Viral Animation</option>
             </select>
           </div>
           <div class="form-group">
+            <label style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px; display: block; font-weight: 600;">AI Script Engine:</label>
+            <select id="autoProducerAiModel" class="form-select" style="width: 100%; padding: 10px 10px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 6px; color: #c084fc; font-size: 0.82rem; font-weight: 700;">
+              <option value="consensus" selected>🧠 Consensus (DeepSeek + Gemini + Qwen)</option>
+              <option value="deepseek">🧠 DeepSeek-R1 (8B Reasoning & Twists)</option>
+              <option value="gemini">✨ Gemini Cloud (Ultra-Fast 3s)</option>
+              <option value="qwen">💻 Qwen 2.5 Coder (7B Offline Formatting)</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px; display: block; font-weight: 600;">Visual Media Source:</label>
-            <select id="autoProducerVisualMode" class="form-select" style="width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 6px; color: #38bdf8; font-size: 0.85rem; font-weight: 700;">
+            <select id="autoProducerVisualMode" class="form-select" style="width: 100%; padding: 10px 10px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 6px; color: #38bdf8; font-size: 0.82rem; font-weight: 700;">
               <option value="hybrid">⚡ Hybrid (Photos + 1080p Videos)</option>
               <option value="photo">📸 Photo-Only (2.5D Ken Burns Animation)</option>
               <option value="video">🎥 Video-Only (Pexels 1080p HD Stock)</option>
+              <option value="gemini_image">🎨 Gemini AI Images (16:9 + 2.5D Motion)</option>
+              <option value="veo_video">🎬 Google Veo 3.1 AI Video Generation</option>
             </select>
           </div>
         </div>
