@@ -375,8 +375,7 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   // 6. Create Concat Demuxer List
   const concatListPath = path.join(tmpDir, "concat_list.txt");
   const concatContent = normalizedClips.map(clip => {
-    const formatted = clip.replace(/\\/g, "/");
-    return `file '${formatted}'`;
+    return `file '${path.basename(clip)}'`;
   }).join("\n");
   fs.writeFileSync(concatListPath, concatContent, "utf8");
 
@@ -386,7 +385,7 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   console.log(`  Destination: ${finalOutputPath}`);
   updateProgress(80, "Multiplexing video, audio master, and hard-burning karaoke subtitles...");
 
-  const subPathEscaped = subFile ? subFile.replace(/\\/g, "/").replace(/:/g, "\\:") : null;
+  const subPathEscaped = subFile ? path.resolve(subFile).replace(/\\/g, "/").replace(/:/g, "\\:") : null;
   const finalVf = subPathEscaped ? `subtitles='${subPathEscaped}'` : null;
 
   const buildFinalArgs = (vf) => {

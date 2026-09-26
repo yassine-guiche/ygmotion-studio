@@ -57,7 +57,48 @@ class VisualGenerator {
       return { success: true, path: outputPath, sizeBytes: buffer.length };
     } catch (err) {
       clearTimeout(timeout);
-      // Fallback: If network generation fails, copy master style reference to ensure pipeline never stops
+      
+      // Fallback 1: Try Pexels Photos API if PEXELS_API_KEY is available
+      try {
+        let pexelsKey = process.env.PEXELS_API_KEY;
+        if (!pexelsKey) {
+          const envPath = path.resolve(__dirname, "../../.env");
+          if (fs.existsSync(envPath)) {
+            const lines = fs.readFileSync(envPath, "utf8").split("\n");
+            for (const l of lines) {
+              if (l.trim().startsWith("PEXELS_API_KEY=")) {
+                pexelsKey = l.trim().split("=")[1].replace(/^["']|["']$/g, "").trim();
+              }
+            }
+          }
+        }
+        if (pexelsKey) {
+          const queryWords = prompt.replace(/[^a-zA-Z\s]/g, " ").split(/\s+/).filter(w => w.length > 4 && !["cinematic", "photorealistic", "lighting", "resolution"].includes(w.toLowerCase()));
+          const query = queryWords.slice(0, 3).join(" ") || "cinematic";
+          const pexelsRes = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=landscape&per_page=5`, {
+            headers: { Authorization: pexelsKey }
+          });
+          if (pexelsRes.ok) {
+            const pData = await pexelsRes.json();
+            if (pData.photos && pData.photos.length > 0) {
+              const photo = pData.photos[Math.floor(Math.random() * Math.min(3, pData.photos.length))];
+              const dlUrl = photo.src.large2x || photo.src.original || photo.src.large;
+              const imgRes = await fetch(dlUrl);
+              if (imgRes.ok) {
+                const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+                const dir = path.dirname(outputPath);
+                if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                fs.writeFileSync(outputPath, imgBuf);
+                return { success: true, path: outputPath, isPexelsFallback: true, sizeBytes: imgBuf.length };
+              }
+            }
+          }
+        }
+      } catch (pxErr) {
+        console.warn("Pexels photo fallback failed:", pxErr.message);
+      }
+
+      // Fallback 2: Local master reference as last resort
       const fallbackCandidates = [
         path.resolve(__dirname, "../../channel_assets/style/master_style_reference_16x9.jpg"),
         path.resolve(__dirname, "../../projects/deep_investigative_dossier/channel_assets/style/master_style_reference_16x9.jpg"),

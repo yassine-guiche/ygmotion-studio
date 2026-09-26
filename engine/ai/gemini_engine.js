@@ -154,11 +154,13 @@ Rules:
     "text": "2 to 4 gripping sentences of spoken voiceover narration...",
     "visualPrompt": "Photorealistic 16:9 cinematic visual prompt, camera angle, atmospheric lighting, 8k resolution, color grade...",
     "cameraMotion": "push_in",
-    "audioMood": "dark_suspense_drone"
+    "audioMood": "dark_suspense_drone",
+    "pexelsQuery": "police car night"
   }
 ]
 Camera motion options: push_in, zoom_out, pan_left_right, tilt_up_down, parallax_float, camera_shake.
-Audio mood options: dark_suspense_drone, police_siren_echo, tense_heartbeat, low_frequency_hum, dramatic_stinger.`;
+Audio mood options: dark_suspense_drone, police_siren_echo, tense_heartbeat, low_frequency_hum, dramatic_stinger.
+pexelsQuery: 2 to 3 precise search words for finding real HD stock videos on Pexels (e.g. 'police siren', 'empty road night', 'storm clouds sky', 'digital clock timer', 'foggy city skyline').`;
 
     const userPrompt = `Generate a master 8-scene video script for:
 Title: "${title}"
@@ -195,6 +197,7 @@ Target Duration: ~${targetDurationMin} minutes.`;
         visualPrompt: s.visualPrompt || s.text,
         cameraMotion: s.cameraMotion || "push_in",
         audioMood: s.audioMood || "dark_suspense_drone",
+        pexelsQuery: s.pexelsQuery || s.title || "cinematic dramatic",
         wordsCount: words,
         estimatedDurationSec: durSec
       };

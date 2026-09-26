@@ -8,8 +8,27 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+function getElevenLabsApiKey() {
+  const envPaths = [
+    path.resolve(__dirname, "../../.env"),
+    path.resolve(process.cwd(), ".env"),
+    path.resolve(__dirname, ".env")
+  ];
+  for (const p of envPaths) {
+    if (fs.existsSync(p)) {
+      const content = fs.readFileSync(p, "utf8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("ELEVENLABS_API_KEY=")) {
+          return trimmed.split("=")[1].replace(/^["']|["']$/g, "").trim();
+        }
+      }
+    }
+  }
+  return process.env.ELEVENLABS_API_KEY || 'sk_fa9e3b9c1972f9c39ffdcac91e250aa054c5939d0cf3c02c';
+}
 
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || 'sk_fa9e3b9c1972f9c39ffdcac91e250aa054c5939d0cf3c02c';
+const ELEVENLABS_API_KEY = getElevenLabsApiKey();
 
 const VOICE_PERSONAS = [
   {
@@ -243,6 +262,112 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
     const s = Math.floor(seconds % 60);
     const cs = Math.floor((seconds % 1) * 100);
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
+  }
+
+  /**
+   * Synthesize full episode spoken voiceover and create master audio track
+   */
+  async synthesizeEpisodeNarration({ episodeId, scenes, voiceId = "NOIR_THRILLER", projectDirOverride = null, onProgress = null }) {
+    const projectManager = require('../projects/project_manager');
+    const epDir = projectManager.resolveEpisodeDir(episodeId, projectDirOverride);
+    const audioDir = path.join(epDir, "audio");
+    if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
+
+    const profile = this.getProfile(voiceId);
+    const elVoiceId = profile.elevenLabsVoiceId || 'VR6AewLTigWG4xSOukaG';
+    const chunkFiles = [];
+    const ffmpeg = "ffmpeg";
+
+    for (let i = 0; i < scenes.length; i++) {
+      const scene = scenes[i];
+      const partIdx = i + 1;
+      const chunkName = `chunk_part_${String(partIdx).padStart(2, '0')}.mp3`;
+      const chunkPath = path.join(audioDir, chunkName);
+
+      if (onProgress) {
+        onProgress(partIdx, scenes.length, `Synthesizing narration for Scene ${partIdx}...`);
+      }
+
+      let generated = false;
+      if (ELEVENLABS_API_KEY && !ELEVENLABS_API_KEY.startsWith('sk_dummy')) {
+        try {
+          const url = `https://api.elevenlabs.io/v1/text-to-speech/${elVoiceId}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'xi-api-key': ELEVENLABS_API_KEY
+            },
+            body: JSON.stringify({
+              text: scene.text,
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: profile.stability || 0.6,
+                similarity_boost: profile.similarityBoost || 0.85
+              }
+            })
+          });
+
+          if (res.ok) {
+            const buf = Buffer.from(await res.arrayBuffer());
+            fs.writeFileSync(chunkPath, buf);
+            chunkFiles.push(chunkPath);
+            generated = true;
+          }
+        } catch (e) {
+          console.warn(`ElevenLabs chunk ${partIdx} fetch failed:`, e.message);
+        }
+      }
+
+      if (!generated) {
+        const estSec = Math.max(3.5, Math.round((scene.wordsCount || 20) / (profile.defaultWpm / 60)));
+        try {
+          execSync(`"${ffmpeg}" -y -f lavfi -i "sine=f=120:d=${estSec},volume=0.2" -c:a aac -b:a 192k "${chunkPath}"`, { stdio: "pipe" });
+          chunkFiles.push(chunkPath);
+        } catch (e) {}
+      }
+    }
+
+    // Concatenate all chunks into epXXX_full_speech_track.mp3
+    const fullSpeechTrack = path.join(audioDir, `${episodeId.toLowerCase()}_full_speech_track.mp3`);
+    const concatListPath = path.join(audioDir, "chunks_concat.txt");
+    const concatContent = chunkFiles.map(c => `file '${path.resolve(c).replace(/\\/g, "/")}'`).join("\n");
+    fs.writeFileSync(concatListPath, concatContent, "utf8");
+
+    try {
+      execSync(`"${ffmpeg}" -y -f concat -safe 0 -i "${concatListPath}" -c:a mp3 -b:a 192k "${fullSpeechTrack}"`, { stdio: "pipe" });
+    } catch (e) {
+      console.warn("Could not concat chunks with ffmpeg:", e.message);
+    }
+
+    // Mix with ambient background music bed (-18dB ducking)
+    const mixedMaster = path.join(audioDir, `${episodeId.toLowerCase()}_mixed_master.mp3`);
+    const musicBedCandidates = [
+      path.join(epDir, "audio", "music_dark_suspense_drone.mp3"),
+      path.resolve(__dirname, "../../projects/deep_investigative_dossier/episodes/EP001/audio/music_dark_suspense_drone.mp3"),
+      path.resolve(__dirname, "../../projects/crime_chronicles/episodes/EP001/audio/music_dark_suspense_drone.mp3"),
+      path.resolve(__dirname, "../../episodes/EP001/audio/music_dark_suspense_drone.mp3")
+    ];
+    let musicBed = musicBedCandidates.find(f => fs.existsSync(f));
+
+    if (fs.existsSync(fullSpeechTrack)) {
+      if (musicBed) {
+        try {
+          const mixCmd = `"${ffmpeg}" -y -i "${fullSpeechTrack}" -i "${musicBed}" -filter_complex "[1:a]volume=0.12[bgm];[0:a][bgm]amix=inputs=2:duration=first:dropout_transition=2" -c:a mp3 -b:a 192k "${mixedMaster}"`;
+          execSync(mixCmd, { stdio: "pipe" });
+        } catch (e) {
+          fs.copyFileSync(fullSpeechTrack, mixedMaster);
+        }
+      } else {
+        fs.copyFileSync(fullSpeechTrack, mixedMaster);
+      }
+    }
+
+    return {
+      chunksCount: chunkFiles.length,
+      fullSpeechTrack,
+      mixedMaster
+    };
   }
 }
 

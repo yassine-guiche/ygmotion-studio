@@ -18,6 +18,7 @@ const path = require("path");
 const geminiEngine = require("../ai/gemini_engine");
 const scriptGenerator = require("../ai/script_generator");
 const visualGenerator = require("../ai/visual_generator");
+const footageManager = require("../footage/footage_manager");
 const motionEngine = require("../motion/motion_engine");
 const voiceDesigner = require("../audio/voice_designer");
 const projectManager = require("../projects/project_manager");
@@ -97,14 +98,14 @@ class AutomatedProducer {
           blueprint,
           topic: title,
           pacingWpm: blueprint.nicheInsights.pacingWpm,
-          targetDurationMin: 2.5
+          targetDurationMin: 2.0
         });
       } catch (err) {
         console.warn("Gemini script generation fallback to generator:", err.message);
         scriptData = await scriptGenerator.generateScript({
           blueprint,
           topic: title,
-          targetDurationMin: 2.5
+          targetDurationMin: 2.0
         });
       }
 
@@ -113,15 +114,15 @@ class AutomatedProducer {
       fs.writeFileSync(path.join(epDir, "script_data.json"), JSON.stringify(scriptData, null, 2), "utf8");
 
       // ----------------------------------------------------
-      // STEP 3: STYLE-CONSISTENT SCENE VISUAL GENERATION
+      // STEP 3: ELEVENLABS SPOKEN NARRATION SYNTHESIS & DUCKED BGM
       // ----------------------------------------------------
-      report(30, "Generating photorealistic 16:9 scene visuals matching script direction...");
-      const styleAnchor = activeProj?.defaultStylePrompt || "cinematic 35mm film, moody dramatic lighting, anamorphic lens, 8k resolution, true crime documentary aesthetic";
-      
-      const visualResults = await visualGenerator.generateAllScenes({
+      report(30, "Synthesizing AI spoken voiceover narration with ElevenLabs...");
+      const voiceId = activeProj?.voiceProfile?.id || "POV_OPERATOR_V1";
+      await voiceDesigner.synthesizeEpisodeNarration({
+        episodeId: targetEpId,
         scenes: scriptData.scenes,
-        episodeDir: epDir,
-        styleAnchor,
+        voiceId,
+        projectDirOverride: projectDir,
         onProgress: (cur, total, msg) => {
           const subProgress = 30 + Math.round((cur / total) * 20);
           report(subProgress, msg);
@@ -129,66 +130,9 @@ class AutomatedProducer {
       });
 
       // ----------------------------------------------------
-      // STEP 4: 2.5D CINEMATIC MOTION ANIMATION
+      // STEP 4: WORD-LEVEL KARAOKE CAPTIONS & TIMESTAMPS
       // ----------------------------------------------------
-      report(55, "Applying 2.5D camera motions to transform scene stills into video clips...");
-      const animatedShots = [];
-
-      for (let i = 0; i < scriptData.scenes.length; i++) {
-        const scene = scriptData.scenes[i];
-        const shotIndex = i + 1;
-        const imgName = `shot_${String(shotIndex).padStart(3, "0")}.jpg`;
-        const imgPath = path.join(epDir, imgName);
-
-        const outClipName = `motion_shot_${String(shotIndex).padStart(3, "0")}.mp4`;
-        const outClipPath = path.join(epDir, outClipName);
-
-        const motionType = scene.cameraMotion || "push_in";
-        const durationSec = scene.estimatedDurationSec || 4.5;
-
-        report(
-          55 + Math.round((shotIndex / scriptData.scenes.length) * 15),
-          `Animating Scene ${shotIndex}/${scriptData.scenes.length} (${motionType})...`
-        );
-
-        try {
-          await motionEngine.animateImage({
-            imagePath: fs.existsSync(imgPath) ? imgPath : null,
-            outputPath: outClipPath,
-            durationSec,
-            motionType
-          });
-        } catch (e) {
-          console.warn(`Motion generation for shot ${shotIndex} failed:`, e.message);
-        }
-
-        animatedShots.push({
-          shotId: `shot_${String(shotIndex).padStart(3, "0")}`,
-          partId: shotIndex,
-          title: scene.title,
-          text: scene.text,
-          visualPrompt: scene.visualPrompt,
-          motionType,
-          durationSec,
-          audio: `chunk_part_${String(shotIndex).padStart(2, "0")}.mp3`,
-          visualType: "ai_scene",
-          file: outClipName,
-          animated: true
-        });
-      }
-
-      // Save updated manifest
-      fs.writeFileSync(path.join(epDir, "footage_manifest.json"), JSON.stringify({
-        episodeId: targetEpId,
-        title,
-        updatedAt: new Date().toISOString(),
-        shots: animatedShots
-      }, null, 2), "utf8");
-
-      // ----------------------------------------------------
-      // STEP 5: VOICE SYNTHESIS & KARAOKE TIMESTAMPS
-      // ----------------------------------------------------
-      report(72, "Aligning spoken narration timestamps and generating animated karaoke captions...");
+      report(52, "Aligning spoken narration timestamps and generating animated karaoke captions...");
       const timing = voiceDesigner.generateWordTimestamps(scriptData.scenes, blueprint.nicheInsights.pacingWpm);
       const assKaraoke = voiceDesigner.generateAssKaraoke(timing.chunks, {
         fontName: "Montserrat",
@@ -216,9 +160,26 @@ class AutomatedProducer {
       fs.writeFileSync(path.join(epDir, "subtitles_karaoke.srt"), srtContent, "utf8");
 
       // ----------------------------------------------------
+      // STEP 5: PEXELS STOCK FOOTAGE & 2.5D DYNAMIC CLIPS
+      // ----------------------------------------------------
+      report(62, "Sourcing HD landscape stock footage from Pexels Video API...");
+      const styleAnchor = activeProj?.defaultStylePrompt || "cinematic 35mm film, moody dramatic lighting, anamorphic lens, 8k resolution, true crime documentary aesthetic";
+      
+      const manifestShots = await footageManager.fetchFootageForEpisode({
+        episodeId: targetEpId,
+        scenes: scriptData.scenes,
+        episodeDir: epDir,
+        styleAnchor,
+        onProgress: (cur, total, msg) => {
+          const subProgress = 62 + Math.round((cur / total) * 18);
+          report(subProgress, msg);
+        }
+      });
+
+      // ----------------------------------------------------
       // STEP 6: ASSEMBLE & RENDER 1080P MASTER VIDEO
       // ----------------------------------------------------
-      report(80, "Assembling 1080p master video, mixing ducked music bed & burning subtitles...");
+      report(82, "Assembling 1080p master video, color-grading clips & burning subtitles...");
       await renderScript.renderEpisode(targetEpId, finalStyleId, projectDir);
 
       const finalVideoPath = path.join(epDir, `${targetEpId}_FINAL_VIDEO_1080P.mp4`);
@@ -245,6 +206,7 @@ class AutomatedProducer {
         videoUrl: `/media/${targetEpId}/${targetEpId}_FINAL_VIDEO_1080P.mp4`,
         sizeMb,
         scenesCount: scriptData.scenes.length,
+        shotsCount: manifestShots.length,
         elapsedSec
       };
     } catch (err) {
