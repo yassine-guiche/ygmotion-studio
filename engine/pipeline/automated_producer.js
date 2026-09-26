@@ -45,6 +45,7 @@ class AutomatedProducer {
     title,
     episodeId = null,
     styleId = null,
+    visualMode = "hybrid",
     projectDirOverride = null,
     onProgress = null
   }) {
@@ -62,6 +63,7 @@ class AutomatedProducer {
       const data = {
         episodeId: targetEpId,
         styleId: finalStyleId,
+        visualMode,
         status: progress >= 100 ? "completed" : "rendering",
         progress: Math.min(100, Math.max(0, Math.round(progress))),
         step,
@@ -162,7 +164,7 @@ class AutomatedProducer {
       // ----------------------------------------------------
       // STEP 5: PEXELS STOCK FOOTAGE & 2.5D DYNAMIC CLIPS
       // ----------------------------------------------------
-      report(62, "Sourcing HD landscape stock footage from Pexels Video API...");
+      report(62, `Sourcing [${visualMode.toUpperCase()}] footage from Pexels & generating animations...`);
       const styleAnchor = activeProj?.defaultStylePrompt || "cinematic 35mm film, moody dramatic lighting, anamorphic lens, 8k resolution, true crime documentary aesthetic";
       
       const manifestShots = await footageManager.fetchFootageForEpisode({
@@ -170,6 +172,7 @@ class AutomatedProducer {
         scenes: scriptData.scenes,
         episodeDir: epDir,
         styleAnchor,
+        visualMode,
         onProgress: (cur, total, msg) => {
           const subProgress = 62 + Math.round((cur / total) * 18);
           report(subProgress, msg);
@@ -188,10 +191,28 @@ class AutomatedProducer {
         sizeMb = (fs.statSync(finalVideoPath).size / (1024 * 1024)).toFixed(1);
       }
 
+      // Mirror into project-level renders/ folder
+      const rendersDir = path.join(projectDir, "renders");
+      if (!fs.existsSync(rendersDir)) fs.mkdirSync(rendersDir, { recursive: true });
+      const safeTitle = (title || targetEpId).replace(/[^a-zA-Z0-9_-]/g, "_").replace(/_+/g, "_").slice(0, 45);
+      const projectMasterPath = path.join(rendersDir, `${targetEpId}_${safeTitle}_1080P.mp4`);
+      if (fs.existsSync(finalVideoPath)) {
+        try { fs.copyFileSync(finalVideoPath, projectMasterPath); } catch {}
+      }
+
+      // Automatically build CapCut Project Draft
+      try {
+        const capcutBuilder = require("../scripts/build_capcut_project");
+        await capcutBuilder.run(targetEpId, projectDir);
+      } catch (ccErr) {
+        console.warn("[AutoProducer] CapCut draft creation notice:", ccErr.message);
+      }
+
       const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
       report(100, `Video production complete! 1080p MP4 ready (${sizeMb} MB in ${elapsedSec}s)`, {
         finalVideo: {
           path: `/media/${targetEpId}/${targetEpId}_FINAL_VIDEO_1080P.mp4`,
+          projectExportPath: projectMasterPath,
           sizeMb,
           renderedAt: new Date().toISOString()
         }

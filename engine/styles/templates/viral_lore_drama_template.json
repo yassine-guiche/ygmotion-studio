@@ -1,0 +1,43 @@
+{
+  "id": "viral_lore_drama",
+  "name": "2026 Serialized Lore & Cosmic Mystery",
+  "category": "viral_lore_drama",
+  "tag": "VIRAL LORE",
+  "description": "Serialized micro-dramas, mythological lore, cosmic anomalies, and psychological suspense designed for binge-watching retention.",
+  "visualPipeline": "stylized_lore_cinematic",
+  "colorPalette": {
+    "primary": "#a855f7",
+    "background": "#030712",
+    "accent": "#06b6d4",
+    "text": "#f1f5f9"
+  },
+  "defaultStylePrompt": "Cinematic mythological cosmic lore, ethereal glowing runes, colossal monolithic ruins, cosmic atmospheric nebula lighting, painterly 2.5D animated aesthetic, Dune meets Elden Ring cinematic art, 8k, volumetric rays, high emotional depth",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "voiceover_only",
+  "voiceProfile": {
+    "voiceId": "COSMIC_LORE_V1",
+    "voiceName": "Lore Keeper (Hypnotic Mystery)",
+    "tone": "Hypnotic, Whispered Intensity, Deep Suspense",
+    "pacing": 155
+  },
+  "scriptFormula": {
+    "structureName": "Serialized Lore Hook",
+    "instructions": "1. Forbidden Knowledge Hook (The one rule that should never have been broken) -> 2. The Ancient Artifact or Creature Unveiled -> 3. The Irreversible Consequence -> 4. The Cliffhanger Mystery"
+  },
+  "audioProfile": {
+    "bgmDuckDb": -18,
+    "sfxLevelDb": -12,
+    "karaokeGlowColor": "#a855f7",
+    "fontFamily": "Montserrat Black"
+  },
+  "defaultCharacters": [
+    {
+      "id": "lore_chronicler",
+      "name": "The Chronicler",
+      "role": "Watcher of Forbidden Lore",
+      "seed": 451928,
+      "visualDescription": "Ageless hooded figure in dark embroidered mantle, glowing turquoise eyes beneath hood, holding ancient obsidian tablet",
+      "portrait_url": null
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "tactical_what_if",
+  "name": "Last Brain Cell: Tactical Military & Alternate History What-Ifs",
+  "category": "tactical_what_if",
+  "tag": "TACTICAL WHAT-IF",
+  "description": "Speculative military simulations, modern tech vs historic armies, strategic tactical breakdowns, satellite radar HUDs, and high-stakes war gaming.",
+  "visualPipeline": "military_tactical_hud",
+  "colorPalette": {
+    "primary": "#00f0ff",
+    "background": "#020617",
+    "accent": "#facc15",
+    "text": "#f8fafc"
+  },
+  "defaultStylePrompt": "Cinematic military tactical simulation photograph, modern aircraft carrier strike group at sea, F-35 fighter jets, satellite radar HUD interface, green and thermal infrared overlay, dynamic battle smoke, hyper-realistic military combat, 8k Unreal Engine render, dramatic storm lighting, anamorphic lens",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "voiceover_only",
+  "voiceProfile": {
+    "voiceId": "TACTICAL_COMMAND_V1",
+    "voiceName": "Tactical Military Analyst",
+    "tone": "Urgent, High-Stakes, Analytical, Decisive",
+    "pacing": 172
+  },
+  "scriptFormula": {
+    "structureName": "Hypothetical Military Simulation",
+    "instructions": "1. Impossible 'What If' Confrontation Hook -> 2. The Asymmetric Capabilities & Weapon Systems -> 3. Minute-by-Minute Tactical Engagement Simulation -> 4. The Surprising Final Tactical Verdict"
+  },
+  "audioProfile": {
+    "bgmDuckDb": -16,
+    "sfxLevelDb": -10,
+    "karaokeGlowColor": "#00f0ff",
+    "fontFamily": "Montserrat Black"
+  },
+  "defaultCharacters": [
+    {
+      "id": "tactical_commander",
+      "name": "Operations Commander",
+      "role": "Tactical Strategist",
+      "seed": 918234,
+      "visualDescription": "40-year-old military operations commander in dark tactical flight suit, headset with boom mic, holographic battle map glow reflecting on face",
+      "portrait_url": null
+    }
+  ]
+}

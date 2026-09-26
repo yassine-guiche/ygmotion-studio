@@ -142,17 +142,19 @@ function streamFile(req, res, filePath) {
 }
 
 function getEpisodeSummary(epId) {
-  const { episodesDir, active } = getActivePaths();
+  const { episodesDir, active, projectDir } = getActivePaths();
   const epDir = path.join(episodesDir, epId);
   if (!fs.existsSync(epDir) || !fs.statSync(epDir).isDirectory()) return null;
 
   const scriptPath = path.join(epDir, "script_master.md");
+  const scriptDataPath = path.join(epDir, "script_data.json");
   const footageManifestPath = path.join(epDir, "footage_manifest.json");
   const voiceChunksPath = path.join(epDir, "voice_chunks.json");
   const mixedAudioPath = path.join(epDir, "audio", `${epId.toLowerCase()}_mixed_master.mp3`);
   const finalVideoCandidates = [
     path.join(epDir, `${epId}_FINAL_VIDEO_1080P.mp4`),
-    path.join(epDir, `${epId}_FULL_EPISODE_10MIN_MASTER_READY_TO_WATCH.mp4`)
+    path.join(epDir, `${epId}_FULL_EPISODE_10MIN_MASTER_READY_TO_WATCH.mp4`),
+    path.join(projectDir, "renders", `${epId}_FINAL_VIDEO_1080P.mp4`)
   ];
 
   let finalVideo = null;
@@ -188,9 +190,31 @@ function getEpisodeSummary(epId) {
   const hasCaptions = fs.existsSync(path.join(epDir, "subtitles_karaoke.ass")) || fs.existsSync(path.join(epDir, "subtitles_karaoke.srt"));
   const hasCapCutDraft = fs.existsSync(path.join(epDir, "capcut_draft", "draft_content.json"));
 
+  // Detect real dynamic title
+  let detectedTitle = null;
+  if (fs.existsSync(scriptDataPath)) {
+    try {
+      const sData = JSON.parse(fs.readFileSync(scriptDataPath, "utf8"));
+      if (sData.title && typeof sData.title === "string") detectedTitle = sData.title.trim();
+    } catch {}
+  }
+  if (!detectedTitle && fs.existsSync(footageManifestPath)) {
+    try {
+      const mData = JSON.parse(fs.readFileSync(footageManifestPath, "utf8"));
+      if (mData.title && typeof mData.title === "string") detectedTitle = mData.title.trim();
+    } catch {}
+  }
+  if (!detectedTitle && fs.existsSync(scriptPath)) {
+    try {
+      const lines = fs.readFileSync(scriptPath, "utf8").split("\n");
+      const h1 = lines.find(l => l.startsWith("# "));
+      if (h1) detectedTitle = h1.replace(/^#\s*/, "").replace(/Master Script:?\s*/i, "").trim();
+    } catch {}
+  }
+
   return {
     id: epId,
-    title: epId === "EP001" && active.id === "crime_chronicles" ? "The Cop Was About to Search My Car" : `${active.name}: ${epId}`,
+    title: detectedTitle || `${active.name}: ${epId}`,
     hasScript,
     hasVoice,
     hasAudio,
@@ -967,7 +991,7 @@ const server = http.createServer(async (req, res) => {
     req.on("data", c => { body += c; });
     req.on("end", async () => {
       try {
-        const { title, episodeId, styleId } = JSON.parse(body || "{}");
+        const { title, episodeId, styleId, visualMode } = JSON.parse(body || "{}");
         if (!title) {
           res.writeHead(400, { "Content-Type": "application/json" });
           return res.end(JSON.stringify({ error: "Missing required video title" }));
@@ -980,6 +1004,7 @@ const server = http.createServer(async (req, res) => {
           title,
           episodeId: targetEpId,
           styleId: styleId || paths.active?.category || "crime_suspense",
+          visualMode: visualMode || "hybrid",
           projectDirOverride: paths.projectDir
         }).catch(err => {
           console.error(`[PIPELINE ASYNC ERROR] ${targetEpId}:`, err.message);
@@ -990,7 +1015,68 @@ const server = http.createServer(async (req, res) => {
           success: true,
           episodeId: targetEpId,
           title,
+          visualMode: visualMode || "hybrid",
           message: `1-Click production initiated for "${title}". Track progress at /api/render/status?episodeId=${targetEpId}`
+        }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: AI Idea to Viral Title & Visual Hook Expansion
+  if (pathname === "/api/ai/expand-idea" && req.method === "POST") {
+    let body = "";
+    req.on("data", c => { body += c; });
+    req.on("end", async () => {
+      try {
+        const { idea, styleId } = JSON.parse(body || "{}");
+        if (!idea) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({ error: "Missing idea string" }));
+        }
+
+        const chosenStyle = styleManager.getStyle(styleId || paths.active?.category || "crime_suspense");
+        const styleName = chosenStyle?.name || styleId || "Cinematic Storytelling";
+
+        const prompt = `You are a viral YouTube channel strategist specializing in ${styleName}.
+User's raw idea: "${idea}"
+Style Archetype: "${chosenStyle?.id}" (${chosenStyle?.description})
+
+Return a JSON object with:
+1. "titles": Array of 4 high-CTR YouTube titles tailored for this specific niche (intriguing, high-curiosity, zero clickbait slop).
+2. "openingHook": 2 sentences of high-retention narration opening.
+3. "recommendedVisualMode": "photo" (for prehistoric/ancient/archival documentaries), "video" (for fast modern action/dashcam), or "hybrid" (for character dialogue + cinematic b-roll).
+4. "visualKeywords": Array of 4 search terms for finding high-resolution stock video or generating 2.5D visual scenes.
+Format strictly as JSON.`;
+
+        let resultJson = null;
+        try {
+          const geminiRes = await geminiEngine.generateContent(prompt, { jsonMode: true, temperature: 0.6 });
+          resultJson = JSON.parse(geminiRes.text);
+        } catch (geminiErr) {
+          console.warn("Gemini idea expansion fallback:", geminiErr.message);
+          resultJson = {
+            titles: [
+              `${idea}: The Untold Truth`,
+              `What Really Happened: ${idea}`,
+              `The Shocking Mystery of ${idea}`,
+              `How Everything Changed: ${idea}`
+            ],
+            openingHook: `Most people believe they know the story of ${idea}. But what really happened was far more unsettling.`,
+            recommendedVisualMode: styleId === "deep_epoch" ? "photo" : "hybrid",
+            visualKeywords: [idea, "cinematic atmosphere", "dramatic mystery", "dark lighting"]
+          };
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({
+          success: true,
+          style: chosenStyle?.id,
+          styleName,
+          ...resultJson
         }));
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });

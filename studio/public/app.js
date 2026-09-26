@@ -2734,6 +2734,11 @@ const cancelAutoProducerBtn = document.getElementById("cancelAutoProducerBtn");
 const startAutoProducerBtn = document.getElementById("startAutoProducerBtn");
 const autoProducerTitleInput = document.getElementById("autoProducerTitleInput");
 const autoProducerStyleSelect = document.getElementById("autoProducerStyleSelect");
+const autoProducerVisualMode = document.getElementById("autoProducerVisualMode");
+const autoProducerExpandBtn = document.getElementById("autoProducerExpandBtn");
+const aiExpandedBox = document.getElementById("aiExpandedBox");
+const aiExpandedTitles = document.getElementById("aiExpandedTitles");
+const aiExpandedHook = document.getElementById("aiExpandedHook");
 const autoProducerProgressCard = document.getElementById("autoProducerProgressCard");
 const autoProducerProgressBar = document.getElementById("autoProducerProgressBar");
 const autoProducerPctLabel = document.getElementById("autoProducerPctLabel");
@@ -2744,6 +2749,7 @@ function openAutoProducerModal(initialTitle = "") {
   if (autoProducerTitleInput) {
     autoProducerTitleInput.value = initialTitle;
   }
+  if (aiExpandedBox) aiExpandedBox.style.display = "none";
   if (autoProducerProgressCard) autoProducerProgressCard.style.display = "none";
   if (startAutoProducerBtn) {
     startAutoProducerBtn.disabled = false;
@@ -2766,9 +2772,64 @@ if (cancelAutoProducerBtn) cancelAutoProducerBtn.addEventListener("click", close
 document.querySelectorAll(".auto-idea-pill").forEach(pill => {
   pill.addEventListener("click", () => {
     const t = pill.getAttribute("data-title");
+    const s = pill.getAttribute("data-style");
     if (autoProducerTitleInput) autoProducerTitleInput.value = t;
+    if (s && autoProducerStyleSelect) autoProducerStyleSelect.value = s;
   });
 });
+
+// AI Idea Expansion Button
+if (autoProducerExpandBtn) {
+  autoProducerExpandBtn.addEventListener("click", async () => {
+    const rawIdea = autoProducerTitleInput ? autoProducerTitleInput.value.trim() : "";
+    if (!rawIdea) {
+      alert("Please enter a raw idea or topic in the title box to expand with AI.");
+      return;
+    }
+
+    autoProducerExpandBtn.disabled = true;
+    autoProducerExpandBtn.innerHTML = `<span>✨ Expanding...</span>`;
+    const styleId = autoProducerStyleSelect ? autoProducerStyleSelect.value : "crime_suspense";
+
+    try {
+      const res = await fetch("/api/ai/expand-idea", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea: rawIdea, styleId })
+      });
+      const data = await res.json();
+      if (data.titles && data.titles.length > 0) {
+        if (aiExpandedBox) aiExpandedBox.style.display = "block";
+        if (aiExpandedTitles) {
+          aiExpandedTitles.innerHTML = data.titles.map(title => `
+            <button type="button" class="btn btn-secondary btn-sm" style="text-align: left; padding: 7px 12px; font-size: 0.82rem; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(192, 132, 252, 0.4); color: #f8fafc; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>📌</span><span>${title}</span>
+            </button>
+          `).join("");
+
+          aiExpandedTitles.querySelectorAll("button").forEach(btn => {
+            btn.addEventListener("click", () => {
+              if (autoProducerTitleInput) {
+                autoProducerTitleInput.value = btn.querySelector("span:last-child").textContent.trim();
+              }
+            });
+          });
+        }
+        if (aiExpandedHook && data.openingHook) {
+          aiExpandedHook.textContent = `🎯 Hook: "${data.openingHook}"`;
+        }
+        if (data.recommendedVisualMode && autoProducerVisualMode) {
+          autoProducerVisualMode.value = data.recommendedVisualMode;
+        }
+      }
+    } catch (e) {
+      console.warn("AI Idea expansion error:", e);
+    } finally {
+      autoProducerExpandBtn.disabled = false;
+      autoProducerExpandBtn.innerHTML = `<span>✨ Expand with AI</span>`;
+    }
+  });
+}
 
 if (startAutoProducerBtn) {
   startAutoProducerBtn.addEventListener("click", async () => {
@@ -2779,19 +2840,20 @@ if (startAutoProducerBtn) {
     }
 
     const styleId = autoProducerStyleSelect ? autoProducerStyleSelect.value : (currentProject?.category || "crime_suspense");
+    const visualMode = autoProducerVisualMode ? autoProducerVisualMode.value : "hybrid";
 
     startAutoProducerBtn.disabled = true;
     startAutoProducerBtn.innerHTML = `<span>Producing Video... 🎬</span>`;
     if (autoProducerProgressCard) autoProducerProgressCard.style.display = "block";
     if (autoProducerProgressBar) autoProducerProgressBar.style.width = "5%";
     if (autoProducerPctLabel) autoProducerPctLabel.textContent = "5%";
-    if (autoProducerStepLabel) autoProducerStepLabel.textContent = "Starting automated production...";
+    if (autoProducerStepLabel) autoProducerStepLabel.textContent = `Starting automated production (${visualMode.toUpperCase()})...`;
 
     try {
       const res = await fetch("/api/pipeline/auto-produce", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, styleId })
+        body: JSON.stringify({ title, styleId, visualMode })
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Failed to start automated producer");

@@ -429,6 +429,17 @@ async function renderEpisode(episodeId = "EP001", styleId = "crime_suspense", pr
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(1);
   const elapsedMin = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
 
+  if (projectDir) {
+    try {
+      const rendersDir = path.join(projectDir, "renders");
+      if (!fs.existsSync(rendersDir)) fs.mkdirSync(rendersDir, { recursive: true });
+      const copyDest = path.join(rendersDir, path.basename(finalOutputPath));
+      fs.copyFileSync(finalOutputPath, copyDest);
+    } catch (e) {
+      console.warn("Notice: could not mirror render to project folder:", e.message);
+    }
+  }
+
   updateProgress(100, "1080p Master Video rendered successfully!", {
     finalVideo: {
       name: path.basename(finalOutputPath),

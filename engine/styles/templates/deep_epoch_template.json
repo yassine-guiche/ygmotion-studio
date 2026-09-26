@@ -1,0 +1,43 @@
+{
+  "id": "deep_epoch",
+  "name": "Deep Epoch: Prehistoric Human Evolution & Ancient Survival",
+  "category": "deep_epoch",
+  "tag": "PREHISTORIC DOC",
+  "description": "Archaeological survival mysteries, ancient human evolution, Ice Age adaptation, and the origin of prehistoric human inventions.",
+  "visualPipeline": "prehistoric_archaeological",
+  "colorPalette": {
+    "primary": "#f59e0b",
+    "background": "#0c0a09",
+    "accent": "#d97706",
+    "text": "#fef3c7"
+  },
+  "defaultStylePrompt": "Cinematic archaeological documentary photograph, prehistoric Earth, ancient Homo sapiens by crackling camp fire, Ice Age mammoth tundra landscape, Neanderthal tools, hyper-detailed anthropological reconstruction, National Geographic 8k photography, volumetric smoke, moody natural dawn light, anamorphic 35mm lens, raw film grain",
+  "speakerMode": "solo_narrator",
+  "narratorMode": "voiceover_only",
+  "voiceProfile": {
+    "voiceId": "DEEP_EPOCH_BARITONE",
+    "voiceName": "Deep Epoch Master Storyteller (Baritone)",
+    "tone": "Deep, Authoritative, Solemn, Investigative",
+    "pacing": 142
+  },
+  "scriptFormula": {
+    "structureName": "Evolutionary Survival Mystery",
+    "instructions": "1. Provocative Survival Hook (How ancient humans survived an impossible biological crisis) -> 2. The Harsh Prehistoric Reality -> 3. The Archaeological Discovery & Evolutionary Adaptation -> 4. The Mind-Bending Legacy on Modern Humans"
+  },
+  "audioProfile": {
+    "bgmDuckDb": -18,
+    "sfxLevelDb": -12,
+    "karaokeGlowColor": "#f59e0b",
+    "fontFamily": "Montserrat Black"
+  },
+  "defaultCharacters": [
+    {
+      "id": "ice_age_hunter",
+      "name": "Ice Age Hunter",
+      "role": "Prehistoric Hunter-Gatherer",
+      "seed": 771924,
+      "visualDescription": "30-year-old ancient human hunter, fur pelts tied with sinew, weathered sun-beaten skin, intense observant brown eyes, holding flint spear by campfire",
+      "portrait_url": null
+    }
+  ]
+}

@@ -227,6 +227,7 @@ class FootageManager {
     scenes,
     episodeDir,
     styleAnchor = "",
+    visualMode = "hybrid",
     onProgress = null
   }) {
     this.usedVideoIds.clear();
@@ -245,12 +246,12 @@ class FootageManager {
       const cameraMotion = scene.cameraMotion || "push_in";
 
       if (onProgress) {
-        onProgress(shotIndex, scenes.length, `Sourcing video footage for Scene ${shotIndex}/${scenes.length} ("${scene.title}")...`);
+        onProgress(shotIndex, scenes.length, `Sourcing [${visualMode.toUpperCase()}] media for Scene ${shotIndex}/${scenes.length} ("${scene.title}")...`);
       }
 
       let shotSource = null;
 
-      // 1. Try Pexels Video Search with primary pexelsQuery & intelligent extracted keywords
+      // Extract high-relevance search queries
       const primaryKeyword = this.extractVisualKeywords(scene);
       const queriesToTry = [primaryKeyword];
       if (scene.pexelsQuery && scene.pexelsQuery !== primaryKeyword) {
@@ -260,25 +261,32 @@ class FootageManager {
         const cleanTitle = scene.title.replace(/^Scene\s*\d+\s*:\s*/i, "").trim().toLowerCase();
         if (!queriesToTry.includes(cleanTitle)) queriesToTry.push(cleanTitle);
       }
-      queriesToTry.push("cinematic suspense", "dramatic city");
+      queriesToTry.push("cinematic atmosphere", "dramatic lighting");
 
-      for (const q of queriesToTry) {
-        try {
-          const vResult = await this.downloadPexelsVideo({
-            query: q,
-            outputPath: videoFilePath,
-            minDurationSec: targetDurationSec
-          });
-          if (vResult && fs.existsSync(videoFilePath) && fs.statSync(videoFilePath).size > 50000) {
-            shotSource = {
-              file: videoFileName,
-              visualType: "pexels_stock_video",
-              sourceDetails: vResult
-            };
-            break;
+      // Check whether this shot should prefer video or photo based on visualMode
+      // In hybrid mode: alternate or pick photo for character dialogue and video for action
+      const preferPhoto = visualMode === "photo" || (visualMode === "hybrid" && (shotIndex % 2 === 1 && !scene.pexelsQuery?.includes("action")));
+
+      // 1. If not photo-only, try Pexels Video Search
+      if (!preferPhoto) {
+        for (const q of queriesToTry) {
+          try {
+            const vResult = await this.downloadPexelsVideo({
+              query: q,
+              outputPath: videoFilePath,
+              minDurationSec: targetDurationSec
+            });
+            if (vResult && fs.existsSync(videoFilePath) && fs.statSync(videoFilePath).size > 50000) {
+              shotSource = {
+                file: videoFileName,
+                visualType: "pexels_stock_video",
+                sourceDetails: vResult
+              };
+              break;
+            }
+          } catch (e) {
+            console.warn(`Pexels video query "${q}" failed:`, e.message);
           }
-        } catch (e) {
-          console.warn(`Pexels video query "${q}" failed:`, e.message);
         }
       }
 

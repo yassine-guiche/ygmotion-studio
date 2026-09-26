@@ -295,5 +295,137 @@
       "instructions": "The Unsolved Paradox -> Forensic Timeline -> Financial Motive -> The Smoking Gun -> Chilling Conclusion"
     },
     "searchTags": ["investigative desk top down", "vintage classified document", "forensic pinboard map", "archival photo sepia"]
+  },
+  "deep_epoch": {
+    "id": "deep_epoch",
+    "name": "Deep Epoch (Prehistoric & Human Evolution)",
+    "description": "Archaeological survival mysteries, Ice Age human adaptation, and the origin of prehistoric inventions. Earthy amber firelight, bone textures, primordial drones.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.18:saturation=0.92:brightness=-0.01,curves=all='0/0 0.2/0.14 0.65/0.66 1/0.96',vignette=angle=PI/5.5",
+      "tone": "Warm Earthen Firelight & Ochre Dawn",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Montserrat ExtraBold",
+      "fontSize": 72,
+      "primaryColor": "&H00FEF3C7",
+      "highlightColor": "&H00F59E0B",
+      "outlineColor": "&H000C0A09",
+      "backColor": "&H80000000",
+      "outline": 4,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 120
+    },
+    "pacing": {
+      "avgShotDurationSec": 5.0,
+      "hookShotDurationSec": 3.0,
+      "motion": "ken_burns_drift"
+    },
+    "audioProfile": {
+      "musicMood": "primordial_drone_tribal_ambient",
+      "sfxTypes": ["campfire_crackle", "flint_strike", "wind_howl", "tribal_percussion", "deep_sub_impact"],
+      "duckingDb": -18
+    },
+    "voiceProfile": {
+      "voiceId": "DEEP_EPOCH_BARITONE",
+      "voiceName": "Deep Epoch Master Storyteller",
+      "tone": "Deep, Authoritative, Solemn, Investigative",
+      "pacing": "deliberate"
+    },
+    "narratorMode": "voiceover_only",
+    "scriptFormula": {
+      "structureName": "Evolutionary Survival Mystery",
+      "instructions": "Provocative Survival Hook -> The Harsh Prehistoric Reality -> The Archaeological Discovery & Evolutionary Adaptation -> The Mind-Bending Legacy on Modern Humans"
+    },
+    "searchTags": ["prehistoric human ancient campfire", "ice age tundra landscape", "archaeological cave stone tools", "ancient tribe hunting gathering", "neanderthal prehistoric discovery"]
+  },
+  "tactical_what_if": {
+    "id": "tactical_what_if",
+    "name": "Last Brain Cell (Tactical Military 'What If')",
+    "description": "Speculative modern military vs historic warfare, tactical situation maps, satellite radar HUDs, supersonic jet dogfights, high-stakes military wargaming.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.24:saturation=1.12:brightness=0.01,unsharp=5:5:0.7:5:5:0.0",
+      "tone": "Tactical Cyan HUD & Combat Night Vision",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Montserrat Black",
+      "fontSize": 76,
+      "primaryColor": "&H00F8FAFC",
+      "highlightColor": "&H0000F0FF",
+      "outlineColor": "&H00020617",
+      "backColor": "&H90000000",
+      "outline": 4,
+      "shadow": 3,
+      "alignment": 2,
+      "marginV": 130
+    },
+    "pacing": {
+      "avgShotDurationSec": 3.0,
+      "hookShotDurationSec": 1.8,
+      "motion": "kinetic_pop"
+    },
+    "audioProfile": {
+      "musicMood": "hybrid_military_tension_synth",
+      "sfxTypes": ["military_radio_squelch", "jet_whoosh_pass", "radar_beep", "heavy_808_impact", "sonar_ping"],
+      "duckingDb": -16
+    },
+    "voiceProfile": {
+      "voiceId": "TACTICAL_COMMAND_V1",
+      "voiceName": "Tactical Military Analyst",
+      "tone": "Urgent, High-Stakes, Analytical, Decisive",
+      "pacing": "fast"
+    },
+    "narratorMode": "voiceover_only",
+    "scriptFormula": {
+      "structureName": "Hypothetical Military Simulation",
+      "instructions": "Impossible 'What If' Confrontation Hook -> Asymmetric Capabilities & Weapon Systems -> Tactical Engagement Simulation -> Surprising Final Tactical Verdict"
+    },
+    "searchTags": ["aircraft carrier naval fleet sea", "fighter jet supersonic flight", "military radar command center", "military helicopter flight dusk", "modern tactical war simulation"]
+  },
+  "viral_lore_drama": {
+    "id": "viral_lore_drama",
+    "name": "2026 Serialized Lore & Cosmic Mystery",
+    "description": "Serialized micro-dramas, cosmic anomalies, mythological lore, and psychological suspense designed for binge-watching retention and world-building.",
+    "colorGrade": {
+      "filter": "eq=contrast=1.20:saturation=0.95:brightness=-0.02,colorbalance=rs=-0.03:gs=-0.02:bs=0.08,vignette=angle=PI/5",
+      "tone": "Cosmic Violet & Eldritch Obsidian",
+      "vignette": true
+    },
+    "subtitles": {
+      "fontName": "Montserrat ExtraBold",
+      "fontSize": 72,
+      "primaryColor": "&H00F1F5F9",
+      "highlightColor": "&H00A855F7",
+      "outlineColor": "&H00030712",
+      "backColor": "&H80000000",
+      "outline": 4,
+      "shadow": 2,
+      "alignment": 2,
+      "marginV": 120
+    },
+    "pacing": {
+      "avgShotDurationSec": 4.6,
+      "hookShotDurationSec": 2.8,
+      "motion": "ken_burns_drift"
+    },
+    "audioProfile": {
+      "musicMood": "ethereal_cosmic_drone",
+      "sfxTypes": ["void_whisper", "ancient_stone_slide", "cosmic_sub_drop", "ethereal_chime", "heartbeat_low"],
+      "duckingDb": -18
+    },
+    "voiceProfile": {
+      "voiceId": "COSMIC_LORE_V1",
+      "voiceName": "Lore Keeper",
+      "tone": "Hypnotic, Whispered Intensity, Deep Suspense",
+      "pacing": "moderate"
+    },
+    "narratorMode": "voiceover_only",
+    "scriptFormula": {
+      "structureName": "Serialized Lore Hook",
+      "instructions": "Forbidden Knowledge Hook -> The Ancient Artifact or Creature Unveiled -> The Irreversible Consequence -> The Cliffhanger Mystery"
+    },
+    "searchTags": ["ancient stone monolith mystery", "nebula cosmic deep space", "dark gothic ruined temple", "mysterious glowing runes night", "ancient dusty library scrolls"]
   }
 }
