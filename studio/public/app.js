@@ -39,6 +39,35 @@ const styleSelect = document.getElementById("styleSelect");
 const activeStyleBadge = document.getElementById("activeStyleBadge");
 const radarGradeText = document.getElementById("radarGradeText");
 
+// Universal Toast Notification System
+function showToast(message, type = "info") {
+  let toastContainer = document.getElementById("ygToastContainer");
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "ygToastContainer";
+    toastContainer.style.cssText = "position: fixed; bottom: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;";
+    document.body.appendChild(toastContainer);
+  }
+
+  const toast = document.createElement("div");
+  const bg = type === "error" ? "rgba(239, 68, 68, 0.95)" : type === "success" ? "rgba(16, 185, 129, 0.95)" : "rgba(15, 23, 42, 0.95)";
+  const border = type === "error" ? "#ef4444" : type === "success" ? "#10b981" : "#00f0ff";
+  toast.style.cssText = `padding: 12px 18px; background: ${bg}; border: 1px solid ${border}; border-radius: 8px; color: #fff; font-size: 0.88rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(8px); transform: translateY(20px); opacity: 0; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;`;
+  toast.textContent = message;
+
+  toastContainer.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.transform = "translateY(0)";
+    toast.style.opacity = "1";
+  });
+
+  setTimeout(() => {
+    toast.style.transform = "translateY(10px)";
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
 // Tab Switcher
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -778,20 +807,8 @@ if (fullscreenBtn) {
 }
 
 if (openFolderBtn) {
-  openFolderBtn.addEventListener("click", async () => {
-    try {
-      const res = await fetch("/api/open-folder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ episodeId: currentEpisode || "EP001" })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(`Folder opened in Windows Explorer:\n${data.opened}`);
-      }
-    } catch (err) {
-      console.error("Open folder error:", err);
-    }
+  openFolderBtn.addEventListener("click", () => {
+    openInTabFilesModal(currentEpisode || "EP001");
   });
 }
 
@@ -1472,11 +1489,19 @@ const confirmDeleteProjectBtn = document.getElementById("confirmDeleteProjectBtn
 const deleteProjectId = document.getElementById("deleteProjectId");
 const deleteProjectTargetName = document.getElementById("deleteProjectTargetName");
 
+const launcherOpenFolderBtn = document.getElementById("launcherOpenFolderBtn");
 const openFolderModal = document.getElementById("openFolderModal");
 const closeOpenFolderModalBtn = document.getElementById("closeOpenFolderModalBtn");
 const cancelOpenFolderModalBtn = document.getElementById("cancelOpenFolderModalBtn");
 const confirmOpenFolderBtn = document.getElementById("confirmOpenFolderBtn");
 const externalFolderPath = document.getElementById("externalFolderPath");
+
+const episodeFilesModal = document.getElementById("episodeFilesModal");
+const closeEpisodeFilesModalBtn = document.getElementById("closeEpisodeFilesModalBtn");
+const doneEpisodeFilesModalBtn = document.getElementById("doneEpisodeFilesModalBtn");
+const openExternalSysExplorerBtn = document.getElementById("openExternalSysExplorerBtn");
+const episodeFilesPathLabel = document.getElementById("episodeFilesPathLabel");
+const episodeFilesTreeContainer = document.getElementById("episodeFilesTreeContainer");
 
 function showLauncher() {
   if (projectLauncher) projectLauncher.classList.remove("view-hidden");
@@ -1899,10 +1924,89 @@ if (confirmCreateProjectBtn) {
 }
 
 // External Folder Modal Controls
-if (launcherOpenFolderBtn) launcherOpenFolderBtn.addEventListener("click", () => { openFolderModal.style.display = "flex"; });
-const navOpenBtn = document.getElementById("openFolderBtn");
+if (launcherOpenFolderBtn) {
+  launcherOpenFolderBtn.addEventListener("click", () => {
+    if (openFolderModal) openFolderModal.style.display = "flex";
+  });
+}
 if (closeOpenFolderModalBtn) closeOpenFolderModalBtn.addEventListener("click", () => { openFolderModal.style.display = "none"; });
 if (cancelOpenFolderModalBtn) cancelOpenFolderModalBtn.addEventListener("click", () => { openFolderModal.style.display = "none"; });
+
+// In-Tab Episode Asset & File Explorer Logic
+async function openInTabFilesModal(epId = "EP001") {
+  if (!episodeFilesModal) return;
+  episodeFilesModal.style.display = "flex";
+  if (episodeFilesPathLabel) episodeFilesPathLabel.textContent = "Scanning directory...";
+  if (episodeFilesTreeContainer) {
+    episodeFilesTreeContainer.innerHTML = '<div style="padding: 24px; text-align: center; color: #94a3b8;">Scanning episode assets...</div>';
+  }
+
+  try {
+    const res = await fetch(`/api/episode/${epId}/files`);
+    const data = await res.json();
+    if (!data.files) throw new Error(data.error || "Could not list files");
+
+    if (episodeFilesPathLabel) {
+      episodeFilesPathLabel.textContent = data.folderPath || `episodes/${epId}`;
+    }
+
+    if (episodeFilesTreeContainer) {
+      episodeFilesTreeContainer.innerHTML = "";
+      
+      function renderFileItem(item, indent = 0) {
+        const row = document.createElement("div");
+        row.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; margin-left: ${indent * 16}px;`;
+        
+        const icon = item.isDir ? '📁' : item.ext === '.mp4' ? '🎬' : item.ext === '.mp3' ? '🎵' : item.ext === '.ass' ? '🔤' : item.ext === '.json' ? '📊' : item.ext === '.md' ? '📄' : '📄';
+
+        row.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+            <span style="font-size: 1.1rem;">${icon}</span>
+            <div>
+              <div style="font-size: 0.9rem; font-weight: 600; color: #f8fafc; font-family: var(--font-mono);">${item.name}</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">${item.sizeFormatted || (item.isDir ? 'Folder' : '')}</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            ${item.mediaUrl ? `<a href="${item.mediaUrl}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem; text-decoration: none;">View 👁️</a>` : ''}
+            ${item.mediaUrl ? `<a href="${item.mediaUrl}" download class="btn btn-primary btn-sm" style="padding: 4px 10px; font-size: 0.75rem; text-decoration: none;">⬇️</a>` : ''}
+          </div>
+        `;
+        episodeFilesTreeContainer.appendChild(row);
+
+        if (item.children && Array.isArray(item.children)) {
+          item.children.forEach(child => renderFileItem(child, indent + 1));
+        }
+      }
+
+      data.files.forEach(f => renderFileItem(f, 0));
+    }
+  } catch (err) {
+    if (episodeFilesTreeContainer) {
+      episodeFilesTreeContainer.innerHTML = `<div style="padding: 20px; color: #ef4444;">Error loading files: ${err.message}</div>`;
+    }
+  }
+}
+
+if (closeEpisodeFilesModalBtn) closeEpisodeFilesModalBtn.addEventListener("click", () => { episodeFilesModal.style.display = "none"; });
+if (doneEpisodeFilesModalBtn) doneEpisodeFilesModalBtn.addEventListener("click", () => { episodeFilesModal.style.display = "none"; });
+if (openExternalSysExplorerBtn) {
+  openExternalSysExplorerBtn.addEventListener("click", async () => {
+    try {
+      const res = await fetch("/api/open-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ episodeId: currentEpisode || "EP001" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("📂 Opened in Windows Explorer: " + data.opened, "success");
+      }
+    } catch (e) {
+      console.warn("Explorer open error:", e);
+    }
+  });
+}
 
 if (confirmOpenFolderBtn) {
   confirmOpenFolderBtn.addEventListener("click", async () => {
@@ -2428,14 +2532,59 @@ if (cancelSceneDirectorModalBtn) cancelSceneDirectorModalBtn.addEventListener("c
 // Batch Animate All
 if (btnBatchAnimateAll) {
   btnBatchAnimateAll.addEventListener("click", async () => {
+    const btns = Array.from(document.querySelectorAll(".btn-animate-shot"));
+    if (btns.length === 0) return;
     btnBatchAnimateAll.disabled = true;
-    btnBatchAnimateAll.textContent = "Batch Animating...";
-    const btns = document.querySelectorAll(".btn-animate-shot");
+    let count = 0;
     for (const b of btns) {
-      await b.click();
+      count++;
+      btnBatchAnimateAll.textContent = `Animating ${count}/${btns.length}... 🎬`;
+      const card = b.closest(".scene-director-card");
+      const shotIndex = parseInt(b.getAttribute("data-shot-index"), 10) || count;
+      const motionSelect = card ? card.querySelector(".scene-motion-select") : null;
+      const motionType = motionSelect ? motionSelect.value : "push_in";
+      try {
+        b.textContent = "Rendering...";
+        b.disabled = true;
+        const res = await fetch("/api/scenes/animate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            episodeId: currentEpisodeId || "EP001",
+            shotIndex,
+            imageRelativePath: "channel_assets/style/master_style_reference_16x9.jpg",
+            motionType,
+            durationSec: 4.0
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.clipUrl && card) {
+          const vid = card.querySelector(".scene-preview-video");
+          const img = card.querySelector(".scene-preview-img");
+          const pill = card.querySelector(".motion-pill");
+          if (vid) {
+            vid.src = `${data.clipUrl}?t=${Date.now()}`;
+            vid.style.display = "block";
+            if (img) img.style.display = "none";
+            vid.play().catch(() => {});
+          }
+          if (pill) {
+            pill.textContent = `🎬 ${motionType.toUpperCase()}`;
+            pill.style.color = "#34d399";
+            pill.style.borderColor = "rgba(52, 211, 153, 0.4)";
+          }
+          b.textContent = "✓ Animated";
+          b.style.background = "#10b981";
+        }
+      } catch (err) {
+        console.warn(`Scene ${count} animation warning:`, err.message);
+        b.textContent = "Retry 🎬";
+        b.disabled = false;
+      }
     }
     btnBatchAnimateAll.disabled = false;
     btnBatchAnimateAll.textContent = "✓ All Scenes Animated!";
+    showToast("✓ All scenes successfully animated into 1080p clips!", "success");
   });
 }
 

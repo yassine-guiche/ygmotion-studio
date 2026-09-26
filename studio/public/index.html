@@ -1050,6 +1050,35 @@
     </div>
   </div>
 
+  <!-- In-Tab Episode Asset & File Explorer Modal -->
+  <div class="modal-overlay" id="episodeFilesModal" style="display: none;">
+    <div class="modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">🗂️</span>
+          <div>
+            <h2>Episode File Assets</h2>
+            <p id="episodeFilesPathLabel" style="font-size: 0.75rem; color: #94a3b8; margin: 0; font-family: var(--font-mono);"></p>
+          </div>
+        </div>
+        <button class="modal-close" id="closeEpisodeFilesModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="max-height: 480px; overflow-y: auto;">
+        <div id="episodeFilesTreeContainer" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Populated dynamically via /api/episode/:id/files -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button class="btn btn-secondary btn-icon" id="openExternalSysExplorerBtn">
+          <span>Open in Windows Explorer 📂</span>
+        </button>
+        <button class="btn btn-primary" id="doneEpisodeFilesModalBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Channel Project Confirmation Modal -->
   <div class="modal-overlay" id="deleteProjectModal" style="display: none;">
     <div class="modal-container" style="max-width: 500px; border-color: rgba(239, 68, 68, 0.4);">

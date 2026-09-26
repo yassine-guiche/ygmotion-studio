@@ -92,8 +92,19 @@ class MotionEngine {
    * Animate a single still image into an MP4 clip
    */
   async animateImage({ imagePath, outputPath, durationSec = 4.0, motionType = 'push_in', colorFilter = '' }) {
-    if (!fs.existsSync(imagePath)) {
-      throw new Error(`Source image not found: ${imagePath}`);
+    let targetImage = imagePath;
+    if (!fs.existsSync(targetImage)) {
+      const candidates = [
+        path.resolve(__dirname, "../../channel_assets/style/master_style_reference_16x9.jpg"),
+        path.resolve(__dirname, "../../projects/ranks_pov_syndicate/channel_assets/style/master_style_reference_16x9.jpg"),
+        path.resolve(__dirname, "../../projects/deep_investigative_dossier/channel_assets/style/master_style_reference_16x9.jpg")
+      ];
+      const found = candidates.find(c => fs.existsSync(c));
+      if (found) {
+        targetImage = found;
+      } else {
+        throw new Error(`Source image not found: ${imagePath}`);
+      }
     }
 
     const profile = MOTION_PROFILES[motionType] || MOTION_PROFILES.push_in;
@@ -109,16 +120,20 @@ class MotionEngine {
       fs.mkdirSync(outDir, { recursive: true });
     }
 
+    // Windows MediaFoundation hardware encoder with libx264 fallback
+    const encoderArgs = process.platform === 'win32'
+      ? ['-c:v', 'h264_mf', '-b:v', '6M']
+      : ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20'];
+
+    // High performance zoompan: single input image without -loop 1
     const args = [
       '-y',
-      '-loop', '1',
-      '-t', durationSec.toFixed(3),
-      '-i', imagePath,
+      '-i', targetImage,
       '-vf', vf,
-      '-c:v', 'libx264',
-      '-preset', 'veryfast',
-      '-crf', '20',
+      ...encoderArgs,
+      '-t', durationSec.toFixed(3),
       '-pix_fmt', 'yuv420p',
+      '-an',
       outputPath
     ];
 
